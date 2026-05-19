@@ -954,7 +954,6 @@
     let selectedSlots = [];
     let selectedRoom = null;
     let currentAvailableRooms = [];
-    let acceptedCapacitySuggestionKey = null;
     let editingReservationId = null;
     let editingOriginalBlocks = [];
     const reservationsById = new Map();
@@ -1210,58 +1209,13 @@
     }
 
     function handleStudentCountChange() {
-      acceptedCapacitySuggestionKey = null;
-      if (selectedSlots.length > 0) loadAvailableRooms();
       updateSummary();
     }
 
-    function getRecommendedRoom(availableRooms) {
-      const studentCount = getStudentCount();
-      if (!studentCount || availableRooms.length === 0) return null;
-      return availableRooms
-        .filter(room => room.capacidad >= studentCount)
-        .sort((a, b) => a.capacidad - b.capacidad || a.nombre.localeCompare(b.nombre))[0] || null;
-    }
-
-    function getCapacitySuggestionKey() {
-      const studentCount = getStudentCount();
-      return [
-        selectedDate || "",
-        selectedSlots.slice().sort().join("|"),
-        selectedRoom || "",
-        studentCount || ""
-      ].join("::");
-    }
-
-    function getSelectedRoomData() {
-      return selectedRoom ? rooms.find(room => room.nombre === selectedRoom) || null : null;
-    }
-
-    function getCapacitySuggestion() {
-      const studentCount = getStudentCount();
-      const selectedRoomData = getSelectedRoomData();
-
-      if (!studentCount || !selectedRoomData) return null;
-      if (selectedRoomData.capacidad >= studentCount) return null;
-
-      const baseRooms = currentAvailableRooms.length > 0 ? getFilteredRooms(currentAvailableRooms) : rooms;
-      const recommendedRoom = getRecommendedRoom(baseRooms);
-
-      if (!recommendedRoom || recommendedRoom.nombre === selectedRoom) return null;
-
-      return {
-        studentCount,
-        selectedRoomData,
-        recommendedRoom,
-        key: getCapacitySuggestionKey()
-      };
-    }
-
-    function renderRoomDetails(room, isRecommended) {
+    function renderRoomDetails(room) {
       return `
         <div class="roomTitle">
           <span>${room.nombre}</span>
-          ${isRecommended ? `<span class="roomBadge recommended">Recomendado</span>` : ""}
         </div>
         <div class="roomMeta">
           <span class="roomBadge">c${room.capacidad}</span>
@@ -1286,67 +1240,42 @@
 
     function renderAvailableRooms(availableRooms) {
       const filteredRooms = getFilteredRooms(availableRooms);
-      const studentCount = getStudentCount();
 
       roomsBox.innerHTML = "";
+      recommendationBox.className = "recommendationBox";
+      recommendationBox.innerHTML = "";
 
       if (availableRooms.length === 0) {
         roomsBox.innerHTML = `<p class="hint">No hay salones disponibles para todos los horarios seleccionados.</p>`;
+        selectedRoom = null;
         return;
       }
 
       if (filteredRooms.length === 0) {
         selectedRoom = null;
         roomsBox.innerHTML = `<p class="hint">No hay salones disponibles que coincidan con los filtros seleccionados.</p>`;
-        recommendationBox.className = "recommendationBox show";
-        recommendationBox.innerHTML = `Probá quitar algún filtro para ver más opciones disponibles.`;
         return;
       }
 
-      const recommendedRoom = getRecommendedRoom(filteredRooms);
       const selectedRoomData = selectedRoom
         ? filteredRooms.find(room => room.nombre === selectedRoom)
         : null;
 
       if (selectedRoom && !selectedRoomData) {
         selectedRoom = null;
-        acceptedCapacitySuggestionKey = null;
-      }
-
-      if (studentCount && recommendedRoom) {
-        recommendationBox.className = "recommendationBox show";
-
-        if (selectedRoomData && selectedRoomData.nombre !== recommendedRoom.nombre) {
-          recommendationBox.innerHTML = `Tenés seleccionado <strong>${selectedRoomData.nombre}</strong> (c${selectedRoomData.capacidad}). Para ${studentCount} estudiantes, te recomendamos <strong>${recommendedRoom.nombre}</strong> (c${recommendedRoom.capacidad}), pero la selección no se cambia automáticamente.`;
-        } else {
-          recommendationBox.innerHTML = `Para ${studentCount} estudiantes, te recomendamos <strong>${recommendedRoom.nombre}</strong> (c${recommendedRoom.capacidad}). Es solo una sugerencia: seleccioná manualmente el salón que quieras reservar.`;
-        }
-      } else if (studentCount && !recommendedRoom) {
-        recommendationBox.className = "recommendationBox show";
-        recommendationBox.innerHTML = `No hay salones disponibles con capacidad suficiente para ${studentCount} estudiantes en los horarios seleccionados. Podés seleccionar otro salón si igualmente querés continuar.`;
-      } else {
-        recommendationBox.className = "recommendationBox";
-        recommendationBox.innerHTML = "";
       }
 
       filteredRooms.forEach(room => {
-        const isRecommended = recommendedRoom && room.nombre === recommendedRoom.nombre;
         const isSelected = selectedRoom ? room.nombre === selectedRoom : false;
         const div = document.createElement("button");
         div.type = "button";
         div.className = `room ${isSelected ? "selected" : ""}`;
-        div.innerHTML = renderRoomDetails(room, isRecommended);
+        div.innerHTML = renderRoomDetails(room);
         div.onclick = () => {
-          if (selectedRoom !== room.nombre) acceptedCapacitySuggestionKey = null;
           selectedRoom = room.nombre;
           document.querySelectorAll(".room").forEach(r => r.classList.remove("selected"));
           div.classList.add("selected");
-
-          const currentStudentCount = getStudentCount();
-          if (currentStudentCount && recommendedRoom && selectedRoom !== recommendedRoom.nombre) {
-            recommendationBox.className = "recommendationBox show";
-            recommendationBox.innerHTML = `Tenés seleccionado <strong>${room.nombre}</strong> (c${room.capacidad}). Para ${currentStudentCount} estudiantes, te recomendamos <strong>${recommendedRoom.nombre}</strong> (c${recommendedRoom.capacidad}), pero la selección no se cambia automáticamente.`;
-          }
+          updateSummary();
         };
 
         roomsBox.appendChild(div);
@@ -1355,7 +1284,6 @@
 
     function handleRoomFilterChange() {
       selectedRoom = null;
-      acceptedCapacitySuggestionKey = null;
       if (selectedDate && selectedSlots.length > 0) {
         renderAvailableRooms(currentAvailableRooms);
       }
@@ -1437,7 +1365,6 @@
       selectedDate = dateText;
       selectedSlots = [];
       selectedRoom = null;
-      acceptedCapacitySuggestionKey = null;
       selectedDateBox.textContent = `Fecha seleccionada: ${formatReadableDate(dateText)}`;
       renderSlots();
       recommendationBox.className = "recommendationBox";
@@ -1460,7 +1387,6 @@
 
     async function toggleSlot(slot) {
       selectedRoom = null;
-      acceptedCapacitySuggestionKey = null;
 
       if (selectedSlots.includes(slot)) {
         selectedSlots = selectedSlots.filter(s => s !== slot);
@@ -1662,15 +1588,6 @@
 
       if (!selectedRoom) {
         showMessage("Seleccioná un salón antes de confirmar la reserva.", "error");
-        return;
-      }
-
-      const capacitySuggestion = getCapacitySuggestion();
-      if (capacitySuggestion && acceptedCapacitySuggestionKey !== capacitySuggestion.key) {
-        acceptedCapacitySuggestionKey = capacitySuggestion.key;
-        recommendationBox.className = "recommendationBox show";
-        recommendationBox.innerHTML = `Tenés seleccionado <strong>${capacitySuggestion.selectedRoomData.nombre}</strong> (c${capacitySuggestion.selectedRoomData.capacidad}). Para ${capacitySuggestion.studentCount} estudiantes, se recomienda <strong>${capacitySuggestion.recommendedRoom.nombre}</strong> (c${capacitySuggestion.recommendedRoom.capacidad}). Si querés mantener tu selección, volvé a presionar <strong>Confirmar reserva</strong>.`;
-        showMessage("Revisá la sugerencia de capacidad. Si querés mantener el salón seleccionado, confirmá nuevamente.", "error");
         return;
       }
 
