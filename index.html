@@ -954,6 +954,7 @@
     let selectedSlots = [];
     let selectedRoom = null;
     let currentAvailableRooms = [];
+    let acceptedCapacitySuggestionKey = null;
     let editingReservationId = null;
     let editingOriginalBlocks = [];
     const reservationsById = new Map();
@@ -1209,6 +1210,7 @@
     }
 
     function handleStudentCountChange() {
+      acceptedCapacitySuggestionKey = null;
       if (selectedSlots.length > 0) loadAvailableRooms();
       updateSummary();
     }
@@ -1219,6 +1221,40 @@
       return availableRooms
         .filter(room => room.capacidad >= studentCount)
         .sort((a, b) => a.capacidad - b.capacidad || a.nombre.localeCompare(b.nombre))[0] || null;
+    }
+
+    function getCapacitySuggestionKey() {
+      const studentCount = getStudentCount();
+      return [
+        selectedDate || "",
+        selectedSlots.slice().sort().join("|"),
+        selectedRoom || "",
+        studentCount || ""
+      ].join("::");
+    }
+
+    function getSelectedRoomData() {
+      return selectedRoom ? rooms.find(room => room.nombre === selectedRoom) || null : null;
+    }
+
+    function getCapacitySuggestion() {
+      const studentCount = getStudentCount();
+      const selectedRoomData = getSelectedRoomData();
+
+      if (!studentCount || !selectedRoomData) return null;
+      if (selectedRoomData.capacidad >= studentCount) return null;
+
+      const baseRooms = currentAvailableRooms.length > 0 ? getFilteredRooms(currentAvailableRooms) : rooms;
+      const recommendedRoom = getRecommendedRoom(baseRooms);
+
+      if (!recommendedRoom || recommendedRoom.nombre === selectedRoom) return null;
+
+      return {
+        studentCount,
+        selectedRoomData,
+        recommendedRoom,
+        key: getCapacitySuggestionKey()
+      };
     }
 
     function renderRoomDetails(room, isRecommended) {
@@ -1274,6 +1310,7 @@
 
       if (selectedRoom && !selectedRoomData) {
         selectedRoom = null;
+        acceptedCapacitySuggestionKey = null;
       }
 
       if (studentCount && recommendedRoom) {
@@ -1300,6 +1337,7 @@
         div.className = `room ${isSelected ? "selected" : ""}`;
         div.innerHTML = renderRoomDetails(room, isRecommended);
         div.onclick = () => {
+          if (selectedRoom !== room.nombre) acceptedCapacitySuggestionKey = null;
           selectedRoom = room.nombre;
           document.querySelectorAll(".room").forEach(r => r.classList.remove("selected"));
           div.classList.add("selected");
@@ -1317,6 +1355,7 @@
 
     function handleRoomFilterChange() {
       selectedRoom = null;
+      acceptedCapacitySuggestionKey = null;
       if (selectedDate && selectedSlots.length > 0) {
         renderAvailableRooms(currentAvailableRooms);
       }
@@ -1398,6 +1437,7 @@
       selectedDate = dateText;
       selectedSlots = [];
       selectedRoom = null;
+      acceptedCapacitySuggestionKey = null;
       selectedDateBox.textContent = `Fecha seleccionada: ${formatReadableDate(dateText)}`;
       renderSlots();
       recommendationBox.className = "recommendationBox";
@@ -1420,6 +1460,7 @@
 
     async function toggleSlot(slot) {
       selectedRoom = null;
+      acceptedCapacitySuggestionKey = null;
 
       if (selectedSlots.includes(slot)) {
         selectedSlots = selectedSlots.filter(s => s !== slot);
@@ -1432,7 +1473,6 @@
     }
 
     async function loadAvailableRooms() {
-      selectedRoom = null;
       recommendationBox.className = "recommendationBox";
       recommendationBox.innerHTML = "";
       roomsBox.innerHTML = `<p class="hint">Buscando salones disponibles...</p>`;
@@ -1617,6 +1657,20 @@
       const resultadoValidacionCorreo = await validarCorreoDocenteParaReserva();
       if (!resultadoValidacionCorreo.valido) {
         showMessage(resultadoValidacionCorreo.mensaje, "error");
+        return;
+      }
+
+      if (!selectedRoom) {
+        showMessage("Seleccioná un salón antes de confirmar la reserva.", "error");
+        return;
+      }
+
+      const capacitySuggestion = getCapacitySuggestion();
+      if (capacitySuggestion && acceptedCapacitySuggestionKey !== capacitySuggestion.key) {
+        acceptedCapacitySuggestionKey = capacitySuggestion.key;
+        recommendationBox.className = "recommendationBox show";
+        recommendationBox.innerHTML = `Tenés seleccionado <strong>${capacitySuggestion.selectedRoomData.nombre}</strong> (c${capacitySuggestion.selectedRoomData.capacidad}). Para ${capacitySuggestion.studentCount} estudiantes, se recomienda <strong>${capacitySuggestion.recommendedRoom.nombre}</strong> (c${capacitySuggestion.recommendedRoom.capacidad}). Si querés mantener tu selección, volvé a presionar <strong>Confirmar reserva</strong>.`;
+        showMessage("Revisá la sugerencia de capacidad. Si querés mantener el salón seleccionado, confirmá nuevamente.", "error");
         return;
       }
 
