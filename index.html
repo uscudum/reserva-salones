@@ -395,6 +395,18 @@
       margin-top: 12px;
     }
 
+    .roomSectionTitle {
+      grid-column: 1 / -1;
+      margin: 8px 0 2px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-size: .9rem;
+      font-weight: 900;
+    }
+
     .roomFilters {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -777,7 +789,9 @@
                   <select id="filterCapacity" onchange="handleRoomFilterChange()">
                     <option value="all">Todas</option>
                     <option value="15">c15</option>
+                    <option value="20">c20</option>
                     <option value="30">c30</option>
+                    <option value="35">c35</option>
                     <option value="50">c50</option>
                   </select>
                 </div>
@@ -923,30 +937,33 @@
     });
 
     const rooms = [
-      { nombre: "Salón 1", tv: true, accesible: true, capacidad: 50, tipo: "Grande" },
-      { nombre: "Salón 2", tv: true, accesible: false, capacidad: 50, tipo: "Grande" },
-      { nombre: "Salón 3", tv: true, accesible: true, capacidad: 50, tipo: "Grande" },
-      { nombre: "Salón 4", tv: false, accesible: true, capacidad: 50, tipo: "Grande" },
-      { nombre: "Salón 5", tv: true, accesible: false, capacidad: 50, tipo: "Grande" },
-      { nombre: "Salón 6", tv: false, accesible: false, capacidad: 50, tipo: "Grande" },
-      { nombre: "Salón 7", tv: true, accesible: true, capacidad: 50, tipo: "Grande" },
-      { nombre: "Salón 8", tv: false, accesible: true, capacidad: 50, tipo: "Grande" },
-      { nombre: "Salón 9", tv: true, accesible: false, capacidad: 30, tipo: "Mediano" },
-      { nombre: "Salón 10", tv: false, accesible: true, capacidad: 30, tipo: "Mediano" },
-      { nombre: "Salón 11", tv: true, accesible: true, capacidad: 30, tipo: "Mediano" },
-      { nombre: "Salón 12", tv: false, accesible: false, capacidad: 30, tipo: "Mediano" },
-      { nombre: "Salón 13", tv: true, accesible: true, capacidad: 30, tipo: "Mediano" },
-      { nombre: "Salón 14", tv: false, accesible: true, capacidad: 30, tipo: "Mediano" },
-      { nombre: "Salón 15", tv: true, accesible: false, capacidad: 30, tipo: "Mediano" },
-      { nombre: "Salón 16", tv: false, accesible: false, capacidad: 30, tipo: "Mediano" },
-      { nombre: "Salón 17", tv: true, accesible: true, capacidad: 15, tipo: "Chico" },
-      { nombre: "Salón 18", tv: false, accesible: true, capacidad: 15, tipo: "Chico" },
-      { nombre: "Salón 19", tv: true, accesible: false, capacidad: 15, tipo: "Chico" },
-      { nombre: "Salón 20", tv: false, accesible: false, capacidad: 15, tipo: "Chico" },
-      { nombre: "Salón 21", tv: true, accesible: true, capacidad: 15, tipo: "Chico" },
-      { nombre: "Salón 22", tv: false, accesible: true, capacidad: 15, tipo: "Chico" },
-      { nombre: "Salón 23", tv: true, accesible: false, capacidad: 15, tipo: "Chico" },
-      { nombre: "Salón 24", tv: false, accesible: false, capacidad: 15, tipo: "Chico" }
+      { nombre: "Salón 1", tv: true, accesible: false, capacidad: 50, tipo: "Salón" },
+      { nombre: "Salón 2", tv: true, accesible: false, capacidad: 50, tipo: "Salón" },
+      { nombre: "Salón 3", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 4", tv: true, accesible: false, capacidad: 50, tipo: "Salón" },
+      { nombre: "Salón 5", tv: true, accesible: false, capacidad: 50, tipo: "Salón" },
+      { nombre: "Salón 6", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 7", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 8", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 9", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 10", tv: false, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 11", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 12", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 13", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 14", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 15", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 16", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 17", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 18", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 19", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 20", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 21", tv: false, accesible: true, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 22", tv: true, accesible: true, capacidad: 35, tipo: "Salón" },
+      { nombre: "Salón 23", tv: false, accesible: true, capacidad: 35, tipo: "Salón" },
+      { nombre: "Laboratorio de informática", tv: true, accesible: true, capacidad: 30, tipo: "Laboratorio" },
+      { nombre: "Laboratorio de química", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" },
+      { nombre: "Laboratorio de biología", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" },
+      { nombre: "Laboratorio de física", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" }
     ];
 
     let currentDate = new Date();
@@ -1253,7 +1270,7 @@
 
       if (filteredRooms.length === 0) {
         selectedRoom = null;
-        roomsBox.innerHTML = `<p class="hint">No hay salones disponibles que coincidan con los filtros seleccionados.</p>`;
+        roomsBox.innerHTML = `<p class="hint">No hay espacios disponibles que coincidan con los filtros seleccionados.</p>`;
         return;
       }
 
@@ -1265,22 +1282,39 @@
         selectedRoom = null;
       }
 
-      filteredRooms.forEach(room => {
-        const isSelected = selectedRoom ? room.nombre === selectedRoom : false;
-        const div = document.createElement("button");
-        div.type = "button";
-        div.className = `room ${isSelected ? "selected" : ""}`;
-        div.innerHTML = renderRoomDetails(room);
-        div.onclick = () => {
-          selectedRoom = room.nombre;
-          document.querySelectorAll(".room").forEach(r => r.classList.remove("selected"));
-          div.classList.add("selected");
-          updateSummary();
-        };
+      const renderGroup = (title, items) => {
+        if (items.length === 0) return;
 
-        roomsBox.appendChild(div);
-      });
+        const sectionTitle = document.createElement("div");
+        sectionTitle.className = "roomSectionTitle";
+        sectionTitle.textContent = title;
+        roomsBox.appendChild(sectionTitle);
+
+        items.forEach(room => {
+          const isSelected = selectedRoom ? room.nombre === selectedRoom : false;
+          const div = document.createElement("button");
+          div.type = "button";
+          div.className = `room ${isSelected ? "selected" : ""}`;
+          div.innerHTML = renderRoomDetails(room);
+          div.onclick = () => {
+            selectedRoom = room.nombre;
+            document.querySelectorAll(".room").forEach(r => r.classList.remove("selected"));
+            div.classList.add("selected");
+            updateSummary();
+          };
+
+          roomsBox.appendChild(div);
+        });
+      };
+
+      const salones = filteredRooms.filter(room => room.tipo !== "Laboratorio");
+      const laboratorios = filteredRooms.filter(room => room.tipo === "Laboratorio");
+
+      renderGroup("Salones", salones);
+      renderGroup("Laboratorios", laboratorios);
     }
+
+    function handleRoomFilterChange
 
     function handleRoomFilterChange() {
       selectedRoom = null;
