@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel admin - Reservas de salones</title>
+  <style>
+    :root {
+      --primary: #ff575d;
+      --primary-dark: #d9363e;
+      --anep-blue: #00AEEF;
+      --orange: #ff8a3d;
+      --orange-dark: #f97316;
+      --yellow: #ffd84d;
+      --bg: #fff7e6;
+      --border: #f4c27b;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --white: #ffffff;
+      --soft-blue: #e0f2fe;
+      --soft-gray: #fffaf2;
+      --soft-orange: #fff3df;
+      --danger-bg: #fee2e2;
+      --danger: #991b1b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(255, 216, 77, .85), transparent 32%),
+        radial-gradient(circle at 88% 18%, rgba(255, 138, 61, .55), transparent 30%),
+        linear-gradient(135deg, #ffe66d 0%, #ffb85c 44%, #ff8a55 100%);
+      color: var(--text);
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 20px 14px;
+    }
+
+    .app {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255,255,255,.94);
+      border: 1px solid rgba(255,255,255,.55);
+      border-radius: 26px;
+      box-shadow: 0 24px 70px rgba(92, 45, 12, 0.22);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero {
+      padding: 16px 20px;
+      background: linear-gradient(135deg, rgba(255,216,77,.96) 0%, rgba(255,147,68,.96) 58%, rgba(255,111,81,.94) 100%);
+      color: #090909;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.20);
+      right: -42px;
+      top: -54px;
+    }
+
+    .brandRow {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .brandPill,
+    .cerpLabel {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.42);
+      border: 1px solid rgba(255,255,255,.62);
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: .78rem;
+      color: #0f172a;
+      width: fit-content;
+    }
+
+    .brandDot {
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      background: var(--anep-blue);
+      box-shadow: 0 0 0 4px rgba(0,174,239,.18);
+    }
+
+    .hero h1 {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      font-size: clamp(1.25rem, 2.1vw, 1.85rem);
+      line-height: 1.1;
+      font-weight: 900;
+      letter-spacing: -.02em;
+      text-transform: uppercase;
+      color: #090909;
+    }
+
+    .hero p {
+      position: relative;
+      z-index: 1;
+      margin: 6px 0 0;
+      max-width: 760px;
+      color: #111827;
+      font-size: .86rem;
+      font-weight: 600;
+    }
+
+    .content {
+      padding: 22px 28px 30px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto auto;
+      gap: 14px;
+      padding: 16px;
+      background: var(--soft-gray);
+      border: 1px solid #f6c985;
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 900;
+      color: #7c2d12;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 13px;
+      border: 1px solid #f2c88c;
+      font: inherit;
+      outline: none;
+      background: white;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255,87,93,.15);
+    }
+
+    .btn {
+      align-self: end;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-weight: 900;
+      cursor: pointer;
+      background: var(--primary);
+      color: white;
+      font-size: .95rem;
+      height: 45px;
+      box-shadow: 0 10px 20px rgba(255,87,93,.22);
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: var(--primary-dark); }
+
+    .btnSecondary {
+      background: #0f172a;
+      box-shadow: 0 10px 20px rgba(15,23,42,.16);
+    }
+
+    .btnSecondary:hover {
+      background: #1f2937;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      border: 1px solid #f6c985;
+      border-radius: 18px;
+      background: white;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(92, 45, 12, .06);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.75rem;
+      margin-top: 4px;
+      color: #0f172a;
+    }
+
+    .message {
+      padding: 13px;
+      border-radius: 14px;
+      background: var(--soft-blue);
+      color: #075985;
+      font-weight: 800;
+      margin-bottom: 18px;
+      border: 1px solid #bae6fd;
+    }
+
+    .message.error {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    .printHeader {
+      display: none;
+      margin-bottom: 16px;
+    }
+
+    .dayGroup {
+      border: 1px solid #f6c985;
+      border-radius: 22px;
+      overflow: hidden;
+      background: white;
+      margin-bottom: 18px;
+      box-shadow: 0 14px 30px rgba(92, 45, 12, .07);
+    }
+
+    .dayHeader {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 15px 18px;
+      background: #fffaf2;
+      border-bottom: 1px solid #f6c985;
+    }
+
+    .dayHeader h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      text-transform: capitalize;
+      color: #111827;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff1f2;
+      color: #9f1239;
+      font-weight: 900;
+      font-size: .82rem;
+      border: 1px solid #fecdd3;
+    }
+
+    .reservationList {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .reservationItem {
+      border: 1px solid #f2c88c;
+      border-radius: 16px;
+      background: white;
+      overflow: hidden;
+    }
+
+    .reservationItem[open] {
+      box-shadow: 0 10px 24px rgba(92, 45, 12, .07);
+    }
+
+    .reservationSummary {
+      list-style: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .reservationSummary::-webkit-details-marker {
+      display: none;
+    }
+
+    .summaryGrid {
+      display: grid;
+      grid-template-columns: 210px 1fr 1fr 130px 150px 30px;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+    }
+
+    .roomBlock strong {
+      display: block;
+      font-size: 1.25rem;
+      font-weight: 950;
+      color: #0f172a;
+      line-height: 1.15;
+    }
+
+    .roomMeta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+    }
+
+    .miniTag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 7px;
+      font-size: .72rem;
+      font-weight: 900;
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+    }
+
+    .mainData span {
+      display: block;
+      color: #9a3412;
+      font-size: .72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      margin-bottom: 2px;
+    }
+
+    .mainData strong {
+      display: block;
+      color: #111827;
+      font-size: .95rem;
+      line-height: 1.25;
+    }
+
+    .timePill {
+      display: inline-block;
+      background: var(--soft-orange);
+      color: #9a3412;
+      font-weight: 950;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: .82rem;
+      line-height: 1.35;
+      text-align: center;
+      border: 1px solid #fed7aa;
+    }
+
+    .expandIcon {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+      font-weight: 950;
+      justify-self: end;
+    }
+
+    .reservationItem[open] .expandIcon {
+      transform: rotate(180deg);
+    }
+
+    .extraDetails {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+
+    .extraDetails div {
+      background: #fffaf2;
+      border: 1px solid #f8dfb8;
+      border-radius: 11px;
+      padding: 9px 10px;
+      font-size: .9rem;
+      word-break: break-word;
+    }
+
+    .extraDetails span {
+      display: block;
+      color: #9a3412;
+      font-weight: 900;
+      font-size: .74rem;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      margin-bottom: 3px;
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      background: #fffaf2;
+      border: 1px dashed #f2c88c;
+      border-radius: 18px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    @media (max-width: 1050px) {
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .summaryGrid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .expandIcon {
+        justify-self: start;
+      }
+
+      .extraDetails {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .toolbar, .stats, .summaryGrid {
+        grid-template-columns: 1fr;
+      }
+
+      .content, .hero {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .brandRow {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+        color: #111827;
+      }
+
+      .page {
+        padding: 0;
+      }
+
+      .app {
+        max-width: none;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: white;
+      }
+
+      .hero,
+      .toolbar,
+      .stats,
+      .message,
+      .expandIcon {
+        display: none !important;
+      }
+
+      .content {
+        padding: 0;
+      }
+
+      .printHeader {
+        display: block;
+      }
+
+      .printHeader h1 {
+        margin: 0 0 4px;
+        font-size: 1.25rem;
+      }
+
+      .printHeader p {
+        margin: 0 0 12px;
+        color: #374151;
+        font-size: .9rem;
+      }
+
+      .dayGroup {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #d1d5db;
+        border-radius: 0;
+        margin-bottom: 12px;
+      }
+
+      .dayHeader {
+        background: #f3f4f6;
+        border-bottom: 1px solid #d1d5db;
+        padding: 9px 10px;
+      }
+
+      .dayHeader h2 {
+        font-size: .95rem;
+      }
+
+      .badge {
+        background: white;
+        color: #111827;
+        border-color: #d1d5db;
+      }
+
+      .reservationList {
+        gap: 0;
+        padding: 0;
+      }
+
+      .reservationItem {
+        border: 0;
+        border-bottom: 1px solid #e5e7eb;
+        border-radius: 0;
+        page-break-inside: avoid;
+      }
+
+      .reservationItem:last-child {
+        border-bottom: 0;
+      }
+
+      .reservationItem:not([open]) .extraDetails {
+        display: none;
+      }
+
+      .summaryGrid {
+        grid-template-columns: 160px 1fr 1fr 100px 120px;
+        gap: 8px;
+        padding: 9px 10px;
+      }
+
+      .roomBlock strong {
+        font-size: 1rem;
+      }
+
+      .roomMeta {
+        gap: 3px;
+      }
+
+      .miniTag,
+      .timePill {
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #111827;
+      }
+
+      .mainData span {
+        color: #374151;
+        font-size: .62rem;
+      }
+
+      .mainData strong {
+        font-size: .82rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="app">
+      <header class="hero">
+        <div class="brandRow">
+          <div class="brandPill"><span class="brandDot"></span> ANEP · Consejo de Formación en Educación</div>
+          <div class="cerpLabel">CERP del Litoral · Sede Salto</div>
+        </div>
+        <h1>Resumen de reservas de salones</h1>
+        <p>Vista interna para consultar rápidamente qué docentes reservaron, en qué salón, horarios y grupo.</p>
+      </header>
+
+      <section class="content">
+        <div class="toolbar">
+          <div>
+            <label for="dateFilter">Filtrar por fecha</label>
+            <input id="dateFilter" type="date" />
+          </div>
+
+          <div>
+            <label for="roomFilter">Filtrar por salón</label>
+            <select id="roomFilter">
+              <option value="">Todos los salones</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="searchFilter">Buscar docente, correo, grupo o unidad</label>
+            <input id="searchFilter" type="text" placeholder="Ej.: Programación, 3°A, correo..." />
+          </div>
+
+          <button class="btn" type="button" onclick="loadReservations()">Actualizar</button>
+          <button class="btn btnSecondary" type="button" onclick="printReservations()">Imprimir listado</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><span>Total de reservas</span><strong id="totalReservations">0</strong></div>
+          <div class="stat"><span>Fechas con reservas</span><strong id="totalDates">0</strong></div>
+          <div class="stat"><span>Salones usados</span><strong id="totalRooms">0</strong></div>
+          <div class="stat"><span>Docentes registrados</span><strong id="totalTeachers">0</strong></div>
+        </div>
+
+        <div id="statusMessage" class="message">Cargando reservas...</div>
+
+        <div class="printHeader">
+          <h1>Listado de reservas de salones</h1>
+          <p id="printInfo">CERP del Litoral · Sede Salto</p>
+        </div>
+
+        <section id="reservationsContainer"></section>
+      </section>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAbGKfBG1VWkRqCMAVZQfU90IxG8qfTBY",
+      authDomain: "reservas-salones-968de.firebaseapp.com",
+      projectId: "reservas-salones-968de",
+      storageBucket: "reservas-salones-968de.firebasestorage.app",
+      messagingSenderId: "479805028463",
+      appId: "1:479805028463:web:01108e65e86f8f4dc4359a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const roomFilter = document.getElementById("roomFilter");
+    const dateFilter = document.getElementById("dateFilter");
+    const searchFilter = document.getElementById("searchFilter");
+    const statusMessage = document.getElementById("statusMessage");
+    const reservationsContainer = document.getElementById("reservationsContainer");
+    const printInfo = document.getElementById("printInfo");
+
+    const rooms = [
+      { name: "Salón 1", capacity: 50, hasTv: true, accessible: false },
+      { name: "Salón 2", capacity: 50, hasTv: true, accessible: false },
+      { name: "Salón 3", capacity: 15, hasTv: true, accessible: false },
+      { name: "Salón 4", capacity: 50, hasTv: true, accessible: false },
+      { name: "Salón 5", capacity: 50, hasTv: true, accessible: false },
+      { name: "Salón 6", capacity: 15, hasTv: true, accessible: false },
+      { name: "Salón 7", capacity: 15, hasTv: true, accessible: false },
+      { name: "Salón 8", capacity: 15, hasTv: true, accessible: false },
+      { name: "Salón 9", capacity: 15, hasTv: true, accessible: false },
+      { name: "Salón 10", capacity: 15, hasTv: false, accessible: false },
+      { name: "Salón 11", capacity: 35, hasTv: true, accessible: false },
+      { name: "Salón 12", capacity: 35, hasTv: true, accessible: false },
+      { name: "Salón 13", capacity: 15, hasTv: true, accessible: false },
+      { name: "Salón 14", capacity: 15, hasTv: true, accessible: false },
+      { name: "Salón 15", capacity: 15, hasTv: true, accessible: false },
+      { name: "Salón 16", capacity: 15, hasTv: true, accessible: false },
+      { name: "Salón 17", capacity: 35, hasTv: true, accessible: false },
+      { name: "Salón 18", capacity: 35, hasTv: true, accessible: false },
+      { name: "Salón 19", capacity: 35, hasTv: true, accessible: false },
+      { name: "Salón 20", capacity: 35, hasTv: true, accessible: false },
+      { name: "Salón 21", capacity: 35, hasTv: false, accessible: true },
+      { name: "Salón 22", capacity: 35, hasTv: false, accessible: true },
+      { name: "Salón 23", capacity: 35, hasTv: false, accessible: true },
+      { name: "Salón 24", capacity: 20, hasTv: false, accessible: true }
+    ];
+
+    rooms.forEach(room => {
+      const option = document.createElement("option");
+      option.value = room.name;
+      option.textContent = getRoomLabel(room);
+      roomFilter.appendChild(option);
+    });
+
+    function getRoomLabel(room) {
+      const tvText = room.hasTv ? "TV" : "sin TV";
+      const accessibleText = room.accessible ? " · Accesible" : "";
+      return `${room.name} · c${room.capacity} · ${tvText}${accessibleText}`;
+    }
+
+    function findRoomInfo(roomName) {
+      return rooms.find(room => room.name === roomName) || {
+        name: roomName || "Sin salón",
+        capacity: "-",
+        hasTv: false,
+        accessible: false
+      };
+    }
+
+    function formatReadableDate(dateText) {
+      const date = new Date(dateText + "T00:00:00");
+      return date.toLocaleDateString("es-UY", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      });
+    }
+
+    function normalizeText(text) {
+      return String(text || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getUnifiedTime(horarios) {
+      if (!Array.isArray(horarios) || horarios.length === 0) return "Sin horario";
+      if (horarios.length === 1) return horarios[0];
+
+      const firstStart = String(horarios[0]).split(" - ")[0];
+      const lastEnd = String(horarios[horarios.length - 1]).split(" - ")[1];
+      return `${firstStart} - ${lastEnd || ""}`.trim();
+    }
+
+    function getLevel(data) {
+      return data.nivel || data.grupo || "No registrado";
+    }
+
+    function renderStats(reservas) {
+      document.getElementById("totalReservations").textContent = reservas.length;
+      document.getElementById("totalDates").textContent = new Set(reservas.map(r => r.fecha)).size;
+      document.getElementById("totalRooms").textContent = new Set(reservas.map(r => r.salon)).size;
+      document.getElementById("totalTeachers").textContent = new Set(reservas.map(r => r.docenteCorreo)).size;
+    }
+
+    function renderRoomTags(roomInfo) {
+      const tags = [`c${roomInfo.capacity}`];
+      tags.push(roomInfo.hasTv ? "TV" : "Sin TV");
+      if (roomInfo.accessible) tags.push("Accesible");
+
+      return tags.map(tag => `<span class="miniTag">${escapeHtml(tag)}</span>`).join("");
+    }
+
+    function renderReservations(reservas) {
+      reservationsContainer.innerHTML = "";
+      renderStats(reservas);
+      updatePrintInfo(reservas.length);
+
+      if (reservas.length === 0) {
+        reservationsContainer.innerHTML = `<div class="empty">No hay reservas para los filtros seleccionados.</div>`;
+        statusMessage.textContent = "Sin resultados para mostrar.";
+        return;
+      }
+
+      statusMessage.textContent = `Mostrando ${reservas.length} reserva(s).`;
+
+      const grouped = reservas.reduce((acc, reserva) => {
+        if (!acc[reserva.fecha]) acc[reserva.fecha] = [];
+        acc[reserva.fecha].push(reserva);
+        return acc;
+      }, {});
+
+      Object.keys(grouped).sort().forEach(fecha => {
+        const reservasDelDia = grouped[fecha].sort((a, b) => {
+          const horarioA = Array.isArray(a.horarios) ? a.horarios[0] : "";
+          const horarioB = Array.isArray(b.horarios) ? b.horarios[0] : "";
+          return horarioA.localeCompare(horarioB) || String(a.salon).localeCompare(String(b.salon), "es", { numeric: true });
+        });
+
+        const group = document.createElement("article");
+        group.className = "dayGroup";
+        group.innerHTML = `
+          <div class="dayHeader">
+            <h2>${escapeHtml(formatReadableDate(fecha))}</h2>
+            <span class="badge">${reservasDelDia.length} reserva(s)</span>
+          </div>
+          <div class="reservationList"></div>
+        `;
+
+        const list = group.querySelector(".reservationList");
+
+        reservasDelDia.forEach(data => {
+          const roomInfo = findRoomInfo(data.salon);
+          const item = document.createElement("details");
+          item.className = "reservationItem";
+          item.innerHTML = `
+            <summary class="reservationSummary">
+              <div class="summaryGrid">
+                <div class="roomBlock">
+                  <strong>${escapeHtml(roomInfo.name)}</strong>
+                  <div class="roomMeta">${renderRoomTags(roomInfo)}</div>
+                </div>
+
+                <div class="mainData">
+                  <span>Docente</span>
+                  <strong>${escapeHtml(data.docenteNombre || "Sin nombre")}</strong>
+                </div>
+
+                <div class="mainData">
+                  <span>Especialidad</span>
+                  <strong>${escapeHtml(data.especialidad || "No registrada")}</strong>
+                </div>
+
+                <div class="mainData">
+                  <span>Nivel / grupo</span>
+                  <strong>${escapeHtml(getLevel(data))}</strong>
+                </div>
+
+                <div class="mainData">
+                  <span>Horario</span>
+                  <strong><span class="timePill">${escapeHtml(getUnifiedTime(data.horarios))}</span></strong>
+                </div>
+
+                <div class="expandIcon">⌄</div>
+              </div>
+            </summary>
+
+            <div class="extraDetails">
+              <div><span>Correo</span>${escapeHtml(data.docenteCorreo || "Sin correo")}</div>
+              <div><span>Unidad curricular</span>${escapeHtml(data.unidadCurricular || "No registrada")}</div>
+            </div>
+          `;
+          list.appendChild(item);
+        });
+
+        reservationsContainer.appendChild(group);
+      });
+    }
+
+    function updatePrintInfo(total) {
+      const filters = [];
+
+      if (dateFilter.value) {
+        filters.push(`Fecha: ${formatReadableDate(dateFilter.value)}`);
+      }
+
+      if (roomFilter.value) {
+        filters.push(`Salón: ${roomFilter.options[roomFilter.selectedIndex].textContent}`);
+      }
+
+      if (searchFilter.value.trim()) {
+        filters.push(`Búsqueda: ${searchFilter.value.trim()}`);
+      }
+
+      const filterText = filters.length > 0 ? filters.join(" · ") : "Sin filtros aplicados";
+      printInfo.textContent = `CERP del Litoral · Sede Salto · ${total} reserva(s) · ${filterText}`;
+    }
+
+    async function loadReservations() {
+      statusMessage.className = "message";
+      statusMessage.textContent = "Cargando reservas...";
+      reservationsContainer.innerHTML = "";
+
+      try {
+        let q;
+        const selectedDate = dateFilter.value;
+
+        if (selectedDate) {
+          q = query(collection(db, "reservas"), where("fecha", "==", selectedDate));
+        } else {
+          q = query(collection(db, "reservas"));
+        }
+
+        const snapshot = await getDocs(q);
+        let reservas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const selectedRoom = roomFilter.value;
+        const search = normalizeText(searchFilter.value);
+
+        if (selectedRoom) {
+          reservas = reservas.filter(r => r.salon === selectedRoom);
+        }
+
+        if (search) {
+          reservas = reservas.filter(r => {
+            const roomInfo = findRoomInfo(r.salon);
+            const fullText = normalizeText([
+              r.docenteNombre,
+              r.docenteCorreo,
+              r.docenteCedula,
+              r.grupo,
+              r.nivel,
+              r.especialidad,
+              r.unidadCurricular,
+              r.salon,
+              roomInfo.capacity,
+              roomInfo.hasTv ? "tv" : "sin tv",
+              roomInfo.accessible ? "accesible" : "",
+              Array.isArray(r.horarios) ? r.horarios.join(" ") : ""
+            ].join(" "));
+            return fullText.includes(search);
+          });
+        }
+
+        reservas.sort((a, b) => {
+          const fechaCompare = String(a.fecha).localeCompare(String(b.fecha));
+          if (fechaCompare !== 0) return fechaCompare;
+
+          const horarioA = Array.isArray(a.horarios) ? a.horarios[0] : "";
+          const horarioB = Array.isArray(b.horarios) ? b.horarios[0] : "";
+          return horarioA.localeCompare(horarioB) || String(a.salon).localeCompare(String(b.salon), "es", { numeric: true });
+        });
+
+        renderReservations(reservas);
+      } catch (error) {
+        console.error("Error al cargar reservas:", error);
+        statusMessage.className = "message error";
+        statusMessage.textContent = "Error al cargar reservas: " + error.message;
+      }
+    }
+
+    function printReservations() {
+      window.print();
+    }
+
+    window.loadReservations = loadReservations;
+    window.printReservations = printReservations;
+
+    roomFilter.addEventListener("change", loadReservations);
+    dateFilter.addEventListener("change", loadReservations);
+    searchFilter.addEventListener("input", () => {
+      clearTimeout(window.__searchTimer);
+      window.__searchTimer = setTimeout(loadReservations, 350);
+    });
+
+    loadReservations();
+  </script>
+</body>
+</html>
