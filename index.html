@@ -304,7 +304,7 @@
 
     .summaryGrid {
       display: grid;
-      grid-template-columns: 190px 1.1fr .75fr 1.05fr 1.25fr;
+      grid-template-columns: 175px 1fr .65fr 1fr 1.15fr 1.05fr;
       gap: 12px;
       align-items: center;
       padding: 13px 16px;
@@ -361,6 +361,24 @@
       font-size: .78rem;
       line-height: 1.25;
       font-weight: 750;
+    }
+
+    .unitData span {
+      font-size: .56rem;
+      color: #9ca3af;
+      font-weight: 700;
+      letter-spacing: .02em;
+      margin-bottom: 1px;
+    }
+
+    .unitData small {
+      display: block;
+      font-size: .58rem;
+      line-height: 1.15;
+      color: #9ca3af;
+      font-weight: 600;
+      max-width: 185px;
+      overflow-wrap: anywhere;
     }
 
     .timePill {
@@ -536,7 +554,7 @@
 
       .summaryGrid {
         display: grid;
-        grid-template-columns: 18% 21% 10% 23% 28%;
+        grid-template-columns: 15% 17% 8% 18% 25% 17%;
         gap: 4px;
         align-items: start;
         padding: 3px 5px;
@@ -561,6 +579,22 @@
         line-height: 1.12;
         color: #000;
         font-weight: 600;
+      }
+
+      .unitData span {
+        font-size: 5pt;
+        color: #777;
+        font-weight: 600;
+      }
+
+      .unitData small {
+        display: block;
+        font-size: 5pt;
+        line-height: 1.05;
+        color: #777;
+        font-weight: 400;
+        max-width: 155px;
+        overflow-wrap: anywhere;
       }
 
       .roomMeta,
@@ -860,6 +894,7 @@
             especialidades: [],
             niveles: [],
             docentes: [],
+            unidadesCurriculares: [],
             horarios: [],
             raw: []
           });
@@ -870,6 +905,7 @@
         item.especialidades.push(reserva.especialidad || "No registrada");
         item.niveles.push(getLevel(reserva));
         item.docentes.push(...formatTeachers(reserva.docenteNombre, reserva.docenteCorreo));
+        item.unidadesCurriculares.push(reserva.unidadCurricular || "No registrada");
 
         if (Array.isArray(reserva.horarios) && reserva.horarios.length > 0) {
           item.horarios.push(getUnifiedTime(reserva.horarios));
@@ -883,6 +919,7 @@
         especialidades: uniqueValues(item.especialidades),
         niveles: uniqueValues(item.niveles),
         docentes: uniqueValues(item.docentes),
+        unidadesCurriculares: uniqueValues(item.unidadesCurriculares),
         horarios: uniqueValues(item.horarios)
       }));
     }
@@ -998,6 +1035,11 @@
               <div class="mainData">
                 <span>Docente/s</span>
                 <small class="smallText">${escapeHtml(data.docentes.join(", "))}</small>
+              </div>
+
+              <div class="mainData unitData">
+                <span>Unidad curricular</span>
+                <small>${escapeHtml(data.unidadesCurriculares.join(" / "))}</small>
               </div>
 
               <div class="mainData">
