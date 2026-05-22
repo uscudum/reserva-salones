@@ -808,9 +808,30 @@
       const parts = cleanName.split(/\s+/);
       if (parts.length === 1) return parts[0];
 
-      const firstInitial = parts[0].charAt(0).toUpperCase() + ".";
-      const lastName = parts[parts.length - 1];
-      return `${firstInitial} ${lastName}`;
+      if (parts.length === 2) {
+        const initial = parts[0].charAt(0).toUpperCase() + ".";
+        return `${initial} ${parts[1]}`;
+      }
+
+      const surnameIndex = Math.floor(parts.length / 2);
+      const selectedName = parts[surnameIndex - 1];
+      const surnames = parts.slice(surnameIndex).join(" ");
+      const initial = selectedName.charAt(0).toUpperCase() + ".";
+
+      return `${initial} ${surnames}`;
+    }
+
+    function formatTeachers(teacherText, email) {
+      const cleanTeacherText = String(teacherText || "").trim();
+
+      if (!cleanTeacherText) {
+        return [formatTeacherShort("", email)];
+      }
+
+      return cleanTeacherText
+        .split("/")
+        .map(teacherName => formatTeacherShort(teacherName.trim(), email))
+        .filter(teacherName => teacherName && teacherName !== "Sin docente");
     }
 
     function roomSortValue(roomName) {
@@ -848,7 +869,7 @@
         item.raw.push(reserva);
         item.especialidades.push(reserva.especialidad || "No registrada");
         item.niveles.push(getLevel(reserva));
-        item.docentes.push(formatTeacherShort(reserva.docenteNombre, reserva.docenteCorreo));
+        item.docentes.push(...formatTeachers(reserva.docenteNombre, reserva.docenteCorreo));
 
         if (Array.isArray(reserva.horarios) && reserva.horarios.length > 0) {
           item.horarios.push(getUnifiedTime(reserva.horarios));
