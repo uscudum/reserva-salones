@@ -131,8 +131,9 @@
     }
 
     .toolbar {
-      display: grid;
-      grid-template-columns: 150px 150px 1fr 1fr auto auto;
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: end;
       gap: 14px;
       padding: 16px;
       background: var(--soft-gray);
@@ -140,6 +141,16 @@
       border-radius: 20px;
       margin-bottom: 18px;
     }
+
+    .toolbar > div {
+      min-width: 0;
+    }
+
+    .fieldMode { flex: 0 0 220px; }
+    .fieldWeekend { flex: 0 0 270px; }
+    .fieldDate { flex: 0 0 150px; }
+    .fieldRoom { flex: 0 0 185px; }
+    .fieldSearch { flex: 1 1 230px; }
 
     label {
       display: block;
@@ -188,6 +199,26 @@
 
     .btnSecondary:hover {
       background: #1f2937;
+    }
+
+    .iconBtn {
+      width: 45px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .iconBtn svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.4;
+    }
+
+    .dateField.isHidden {
+      display: none;
     }
 
     .stats {
@@ -407,7 +438,15 @@
 
     @media (max-width: 1050px) {
       .toolbar {
-        grid-template-columns: 1fr 1fr;
+        flex-wrap: wrap;
+      }
+
+      .fieldMode,
+      .fieldWeekend,
+      .fieldDate,
+      .fieldRoom,
+      .fieldSearch {
+        flex: 1 1 220px;
       }
 
       .summaryGrid {
@@ -424,7 +463,25 @@
     }
 
     @media (max-width: 700px) {
-      .toolbar, .stats, .summaryGrid {
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .fieldMode,
+      .fieldWeekend,
+      .fieldDate,
+      .fieldRoom,
+      .fieldSearch {
+        flex: 1 1 auto;
+        width: 100%;
+      }
+
+      .iconBtn {
+        width: 100%;
+      }
+
+      .stats, .summaryGrid {
         grid-template-columns: 1fr;
       }
 
@@ -648,30 +705,57 @@
 
       <section class="content">
         <div class="toolbar">
-          <div>
+          <div class="fieldMode">
+            <label for="dateModeFilter">Visualización</label>
+            <select id="dateModeFilter">
+              <option value="weekend">Viernes y sábado</option>
+              <option value="all">Todas las reservas</option>
+              <option value="custom">Rango personalizado</option>
+            </select>
+          </div>
+
+          <div id="weekendField" class="dateField fieldWeekend">
+            <label for="weekendFilter">Semana / bloque</label>
+            <select id="weekendFilter"></select>
+          </div>
+
+          <div id="fromDateField" class="dateField fieldDate isHidden">
             <label for="fromDateFilter">Desde</label>
             <input id="fromDateFilter" type="date" />
           </div>
 
-          <div>
+          <div id="toDateField" class="dateField fieldDate isHidden">
             <label for="toDateFilter">Hasta</label>
             <input id="toDateFilter" type="date" />
           </div>
 
-          <div>
+          <div class="fieldRoom">
             <label for="roomFilter">Filtrar por salón</label>
             <select id="roomFilter">
               <option value="">Todos los salones</option>
             </select>
           </div>
 
-          <div>
+          <div class="fieldSearch">
             <label for="searchFilter">Buscar docente, correo, grupo o unidad</label>
             <input id="searchFilter" type="text" placeholder="Ej.: Programación, 3°A, correo..." />
           </div>
 
-          <button class="btn" type="button" onclick="loadReservations()">Actualizar</button>
-          <button class="btn btnSecondary" type="button" onclick="printReservations()">Imprimir listado</button>
+          <button class="btn iconBtn" type="button" onclick="loadReservations()" title="Actualizar" aria-label="Actualizar reservas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M21 12a9 9 0 0 1-15.2 6.5" />
+              <path d="M3 12A9 9 0 0 1 18.2 5.5" />
+              <path d="M18 2v4h4" />
+              <path d="M6 22v-4H2" />
+            </svg>
+          </button>
+          <button class="btn btnSecondary iconBtn" type="button" onclick="printReservations()" title="Imprimir" aria-label="Imprimir listado">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M6 9V2h12v7" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <path d="M6 14h12v8H6z" />
+            </svg>
+          </button>
         </div>
 
         <div class="stats">
@@ -715,6 +799,11 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    const dateModeFilter = document.getElementById("dateModeFilter");
+    const weekendFilter = document.getElementById("weekendFilter");
+    const weekendField = document.getElementById("weekendField");
+    const fromDateField = document.getElementById("fromDateField");
+    const toDateField = document.getElementById("toDateField");
     const roomFilter = document.getElementById("roomFilter");
     const fromDateFilter = document.getElementById("fromDateFilter");
     const toDateFilter = document.getElementById("toDateFilter");
@@ -792,6 +881,28 @@
         month: "long",
         year: "numeric"
       });
+    }
+
+    function formatCompactWeekend(fridayText, saturdayText) {
+      const friday = new Date(fridayText + "T00:00:00");
+      const saturday = new Date(saturdayText + "T00:00:00");
+
+      const fridayDay = friday.getDate();
+      const saturdayDay = saturday.getDate();
+      const fridayMonth = String(friday.getMonth() + 1).padStart(2, "0");
+      const saturdayMonth = String(saturday.getMonth() + 1).padStart(2, "0");
+      const fridayYear = friday.getFullYear();
+      const saturdayYear = saturday.getFullYear();
+
+      if (fridayMonth === saturdayMonth && fridayYear === saturdayYear) {
+        return `${fridayDay} y ${saturdayDay} del ${fridayMonth} / ${fridayYear}`;
+      }
+
+      if (fridayYear === saturdayYear) {
+        return `${fridayDay}/${fridayMonth} y ${saturdayDay}/${saturdayMonth} / ${fridayYear}`;
+      }
+
+      return `${fridayDay}/${fridayMonth}/${fridayYear} y ${saturdayDay}/${saturdayMonth}/${saturdayYear}`;
     }
 
     function normalizeText(text) {
@@ -924,23 +1035,83 @@
       }));
     }
 
-    function getFridayAndSaturdayOfCurrentWeek() {
-      const today = new Date();
+    function toDateInputValue(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function getNextFridayAndSaturday(baseDate = new Date()) {
+      const today = new Date(baseDate);
+      today.setHours(0, 0, 0, 0);
+
       const day = today.getDay();
-      const diffToMonday = day === 0 ? -6 : 1 - day;
-      const monday = new Date(today);
-      monday.setDate(today.getDate() + diffToMonday);
+      let daysUntilFriday = (5 - day + 7) % 7;
 
-      const friday = new Date(monday);
-      friday.setDate(monday.getDate() + 4);
+      // Si ya es sábado o domingo, se muestra el próximo viernes-sábado.
+      if (day === 6 || day === 0) {
+        daysUntilFriday = day === 6 ? 6 : 5;
+      }
 
-      const saturday = new Date(monday);
-      saturday.setDate(monday.getDate() + 5);
+      const friday = new Date(today);
+      friday.setDate(today.getDate() + daysUntilFriday);
+
+      const saturday = new Date(friday);
+      saturday.setDate(friday.getDate() + 1);
 
       return {
-        friday: friday.toISOString().slice(0, 10),
-        saturday: saturday.toISOString().slice(0, 10)
+        friday: toDateInputValue(friday),
+        saturday: toDateInputValue(saturday)
       };
+    }
+
+    function addDays(dateText, amount) {
+      const date = new Date(dateText + "T00:00:00");
+      date.setDate(date.getDate() + amount);
+      return toDateInputValue(date);
+    }
+
+    function populateWeekendFilter() {
+      weekendFilter.innerHTML = "";
+      const firstWeekend = getNextFridayAndSaturday();
+      const options = [];
+
+      for (let i = 0; i < 16; i++) {
+        const friday = addDays(firstWeekend.friday, i * 7);
+        const saturday = addDays(firstWeekend.saturday, i * 7);
+        options.push({ friday, saturday });
+      }
+
+      options.forEach((option, index) => {
+        const selectOption = document.createElement("option");
+        selectOption.value = `${option.friday}|${option.saturday}`;
+        selectOption.textContent = `${index === 0 ? "Próximo: " : ""}${formatCompactWeekend(option.friday, option.saturday)}`;
+        weekendFilter.appendChild(selectOption);
+      });
+    }
+
+    function getSelectedDateRange() {
+      if (dateModeFilter.value === "all") {
+        return { from: "", to: "" };
+      }
+
+      if (dateModeFilter.value === "custom") {
+        return {
+          from: fromDateFilter.value,
+          to: toDateFilter.value
+        };
+      }
+
+      const [from, to] = weekendFilter.value.split("|");
+      return { from, to };
+    }
+
+    function updateDateModeView() {
+      const mode = dateModeFilter.value;
+      weekendField.classList.toggle("isHidden", mode !== "weekend");
+      fromDateField.classList.toggle("isHidden", mode !== "custom");
+      toDateField.classList.toggle("isHidden", mode !== "custom");
     }
 
     function getStats(reservas) {
@@ -1058,8 +1229,12 @@
     function updatePrintInfo(total) {
       const filters = [];
 
-      if (fromDateFilter.value || toDateFilter.value) {
-        filters.push(`Fechas: ${fromDateFilter.value ? formatReadableDate(fromDateFilter.value) : "inicio"} a ${toDateFilter.value ? formatReadableDate(toDateFilter.value) : "fin"}`);
+      const selectedRange = getSelectedDateRange();
+
+      if (dateModeFilter.value === "all") {
+        filters.push("Fechas: todas las reservas");
+      } else if (selectedRange.from || selectedRange.to) {
+        filters.push(`Fechas: ${selectedRange.from ? formatReadableDate(selectedRange.from) : "inicio"} a ${selectedRange.to ? formatReadableDate(selectedRange.to) : "fin"}`);
       }
 
       if (roomFilter.value) {
@@ -1081,8 +1256,9 @@
 
       try {
         let q;
-        const selectedFromDate = fromDateFilter.value;
-        const selectedToDate = toDateFilter.value;
+        const selectedRange = getSelectedDateRange();
+        const selectedFromDate = selectedRange.from;
+        const selectedToDate = selectedRange.to;
 
         if (selectedFromDate && selectedToDate) {
           q = query(collection(db, "reservas"), where("fecha", ">=", selectedFromDate), where("fecha", "<=", selectedToDate));
@@ -1154,6 +1330,11 @@
     window.loadReservations = loadReservations;
     window.printReservations = printReservations;
 
+    dateModeFilter.addEventListener("change", () => {
+      updateDateModeView();
+      loadReservations();
+    });
+    weekendFilter.addEventListener("change", loadReservations);
     roomFilter.addEventListener("change", loadReservations);
     fromDateFilter.addEventListener("change", loadReservations);
     toDateFilter.addEventListener("change", loadReservations);
@@ -1162,7 +1343,10 @@
       window.__searchTimer = setTimeout(loadReservations, 350);
     });
 
-    const defaultWeek = getFridayAndSaturdayOfCurrentWeek();
+    populateWeekendFilter();
+    updateDateModeView();
+
+    const defaultWeek = getNextFridayAndSaturday();
     fromDateFilter.value = defaultWeek.friday;
     toDateFilter.value = defaultWeek.saturday;
 
