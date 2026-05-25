@@ -1648,6 +1648,8 @@
         roomsBox.innerHTML = `<p class="hint">No se pudo consultar la disponibilidad. Revisá las reglas de Firestore o la conexión.</p>`;
         return;
       }
+      
+      const selectedDay = new Date(selectedDate + "T00:00:00").getDay();
 
       currentAvailableRooms = rooms
         .filter(room => !occupiedRooms.has(room.nombre))
