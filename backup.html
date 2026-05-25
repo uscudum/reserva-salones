@@ -585,6 +585,36 @@
     .authStatus.warn { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
     .authStatus.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 
+
+    .specialtyReservations {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 15px;
+      padding: 12px;
+      margin: 12px 0 16px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .specialtyReservationsTitle {
+      font-weight: 900;
+      color: #111827;
+      margin-bottom: 2px;
+    }
+
+    .specialtyReservationItem {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-left: 5px solid var(--anep-blue);
+      border-radius: 12px;
+      padding: 10px 11px;
+      color: var(--text);
+      line-height: 1.45;
+      font-size: .88rem;
+    }
+
+    .specialtyReservationItem strong { color: #0f172a; }
+
     .btnGoogleAuth {
       background: #ffffff;
       color: #111827;
@@ -698,22 +728,22 @@
           <div class="cerpLabel">CERP del Litoral · Sede Salto</div>
         </div>
         <h1>Reserva de salones para cursos del semipresencial</h1>
-        <p>Seleccioná una fecha habilitada, marcá todos los horarios que necesitás, elegí un salón disponible y completá los datos de la reserva.</p>
+        <p>Seleccioná una fecha habilitada, completá los datos del grupo, revisá las reservas existentes para la especialidad y luego elegí horarios y salón disponible.</p>
       </header>
 
       <section class="content">
         <div class="steps">
           <div class="step active" id="step1">
             <div class="stepNumber">1</div>
-            <div><strong>Fecha, horario y salón</strong><span>Disponibilidad automática</span></div>
+            <div><strong>Fecha y grupo</strong><span>Especialidad y nivel</span></div>
           </div>
           <div class="step" id="step2">
             <div class="stepNumber">2</div>
-            <div><strong>Datos del docente</strong><span>Identificación y contacto</span></div>
+            <div><strong>Horario y salón</strong><span>Disponibilidad automática</span></div>
           </div>
           <div class="step" id="step3">
             <div class="stepNumber">3</div>
-            <div><strong>Datos del grupo</strong><span>Grupo y unidad curricular</span></div>
+            <div><strong>Datos del docente</strong><span>Identificación y contacto</span></div>
           </div>
         </div>
 
@@ -756,14 +786,68 @@
 
           <div class="card">
             <div id="section1" class="formSection active">
-              <h2>Disponibilidad</h2>
-              <p class="hint">Primero seleccioná la fecha. Luego marcá uno o varios bloques horarios.</p>
+              <h2>Fecha y datos del grupo</h2>
+              <p class="hint">Primero seleccioná la fecha y completá especialidad, grupo y unidad curricular. Con esos datos se mostrarán las reservas existentes de esa especialidad para el día seleccionado.</p>
 
               <div class="selectedBox" id="selectedDateBox">Todavía no seleccionaste una fecha.</div>
 
+              <div class="grid2">
+                <div class="field">
+                  <label for="specialty">Especialidad</label>
+                  <select id="specialty">
+                    <option value="">Seleccioná una especialidad</option>
+                    <option value="Geografía">Geografía</option>
+                    <option value="Com. Visual">Com. Visual</option>
+                    <option value="C. Biológicas">C. Biológicas</option>
+                    <option value="Derecho-Sociología">Derecho-Sociología</option>
+                    <option value="Derecho">Derecho</option>
+                    <option value="Informática">Informática</option>
+                    <option value="Español">Español</option>
+                    <option value="Literatura">Literatura</option>
+                    <option value="Filosofía">Filosofía</option>
+                    <option value="Física">Física</option>
+                    <option value="Historia">Historia</option>
+                    <option value="Inglés">Inglés</option>
+                    <option value="Matemática">Matemática</option>
+                    <option value="Química">Química</option>
+                    <option value="Otra">Otra</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="groupName">Grupo</label>
+                  <select id="groupName">
+                    <option value="">Seleccioná un grupo</option>
+                    <option value="1º">1º</option>
+                    <option value="2º">2º</option>
+                    <option value="3º">3º</option>
+                    <option value="4º">4º</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="subject">Unidad curricular</label>
+                <input id="subject" type="text" placeholder="Ej.: Programación" />
+              </div>
+
+              <div class="specialtyReservations" id="specialtyReservationsBox">
+                <div class="specialtyReservationsTitle">Reservas de la especialidad</div>
+                <p class="hint">Seleccioná una fecha y una especialidad para ver las reservas existentes.</p>
+              </div>
+
+              <div class="actions">
+                <button class="btn btnSecondary" type="button" onclick="resetToStart()">Volver al inicio</button>
+                <button class="btn btnPrimary" type="button" onclick="goToStep(2)">Continuar</button>
+              </div>
+            </div>
+
+            <div id="section2" class="formSection">
+              <h2>Disponibilidad</h2>
+              <p class="hint">Marcá uno o varios bloques horarios y luego elegí un salón disponible para todos esos horarios.</p>
+
               <label>Horarios disponibles</label>
               <div class="slots" id="slotsBox">
-                <p class="hint">Seleccioná una fecha para ver horarios.</p>
+                <p class="hint">Completá la fecha y los datos del grupo para ver horarios.</p>
               </div>
 
               <div class="recommendationBox" id="recommendationBox"></div>
@@ -801,25 +885,27 @@
               </div>
 
               <div class="actions">
-                <span></span>
-                <button class="btn btnPrimary" type="button" onclick="goToStep(2)">Continuar</button>
+                <button class="btn btnSecondary" type="button" onclick="goToStep(1)">Volver</button>
+                <button class="btn btnSecondary" type="button" onclick="resetToStart()">Volver al inicio</button>
+                <button class="btn btnPrimary" type="button" onclick="goToStep(3)">Continuar</button>
               </div>
             </div>
 
-            <div id="section2" class="formSection">
+            <div id="section3" class="formSection">
               <h2>Datos del docente</h2>
               <p class="hint">Al confirmar, se enviará una notificación al correo ingresado.</p>
 
               <div class="field">
                 <label for="teacherName">Nombre completo</label>
                 <input id="teacherName" type="text" placeholder="Ej.: María Rodríguez" oninput="validateTeacherNameLive()" />
-                  <div class="fieldError" id="teacherNameError">El nombre debe tener al menos 4 caracteres y no puede contener números.</div>
+                <div class="fieldError" id="teacherNameError">El nombre debe tener al menos 4 caracteres y no puede contener números.</div>
               </div>
 
               <div class="grid2">
                 <div class="field">
                   <label for="teacherDocument">Cédula</label>
-                  <input id="teacherDocument" type="text" placeholder="Ej.: 4.123.456-7" />
+                  <input id="teacherDocument" type="text" inputmode="numeric" maxlength="8" placeholder="Ej.: 41234567" oninput="validateTeacherDocumentLive()" />
+                  <div class="fieldError" id="teacherDocumentError">Ingresá una cédula uruguaya válida, sin puntos ni guiones.</div>
                 </div>
                 <div class="field">
                   <label for="teacherEmail">Correo electrónico</label>
@@ -830,41 +916,11 @@
                 </div>
               </div>
 
-              <div class="actions">
-                <button class="btn btnSecondary" type="button" onclick="goToStep(1)">Volver</button>
-                <button class="btn btnPrimary" type="button" onclick="goToStep(3)">Continuar</button>
-              </div>
-            </div>
-
-            <div id="section3" class="formSection">
-              <h2>Datos del grupo</h2>
-              <p class="hint">Completá la información académica de la reserva.</p>
-
-              <div class="grid2">
-                <div class="field">
-                  <label for="groupName">Grupo</label>
-                  <input id="groupName" type="text" placeholder="Ej.: 3°" />
-                </div>
-                <div class="field">
-                  <label for="specialty">Especialidad</label>
-                  <input id="specialty" type="text" placeholder="Ej.: Informática" />
-                </div>
-              </div>
-
-              <div class="field">
-                <label for="subject">Unidad curricular</label>
-                <input id="subject" type="text" placeholder="Ej.: Programación" />
-              </div>
-
-              <div class="field">
-                <label for="studentCount">Cantidad de estudiantes</label>
-                <input id="studentCount" type="number" min="1" max="50" placeholder="Ej.: 25 (aproximado si no lo sabés)" oninput="handleStudentCountChange()" />
-              </div>
-
               <div class="summary" id="summaryBox"></div>
 
               <div class="actions">
                 <button class="btn btnSecondary" type="button" onclick="goToStep(2)">Volver</button>
+                <button class="btn btnSecondary" type="button" onclick="resetToStart()">Volver al inicio</button>
                 <button class="btn btnPrimary" type="button" onclick="saveReservation()">Confirmar reserva</button>
               </div>
             </div>
@@ -910,6 +966,11 @@
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
+    import {
+      initializeAppCheck,
+      ReCaptchaV3Provider
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app-check.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyCAbGKfBG1VWkRqCMAVZQfU90IxG8qfTBY",
       authDomain: "reservas-salones-968de.firebaseapp.com",
@@ -919,13 +980,19 @@
       appId: "1:479805028463:web:01108e65e86f8f4dc4359a"
     };
 
-    const EMAILJS_PUBLIC_KEY = "S-iSEhpsmeCB0NWqO";
-    const EMAILJS_SERVICE_ID = "service_lh5f75s";
-    const EMAILJS_TEMPLATE_ID = "template_g50bzjj";
+    const EMAILJS_PUBLIC_KEY = "JxyElhC-gbPduFaDt";
+    const EMAILJS_SERVICE_ID = "service_ctovevl";
+    const EMAILJS_TEMPLATE_ID = "template_x1eqj7e";
 
     emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
     const app = initializeApp(firebaseConfig);
+
+    const appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider("6Lf2JvssAAAAANofChpVxcYVi-es1zEoUnjP0VfF"),
+      isTokenAutoRefreshEnabled: true
+    });
+
     const db = getFirestore(app);
     const auth = getAuth(app);
     const googleProvider = new GoogleAuthProvider();
@@ -949,7 +1016,7 @@
       { nombre: "Salón 10", tv: false, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 11", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
       { nombre: "Salón 12", tv: true, accesible: false, capacidad: 35, tipo: "Salón" },
-      { nombre: "Salón 13", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
+      { nombre: "Salón 13", tv: false, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 14", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 15", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
       { nombre: "Salón 16", tv: true, accesible: false, capacidad: 15, tipo: "Salón" },
@@ -963,7 +1030,8 @@
       { nombre: "Laboratorio de informática", tv: true, accesible: true, capacidad: 30, tipo: "Laboratorio" },
       { nombre: "Laboratorio de química", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" },
       { nombre: "Laboratorio de biología", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" },
-      { nombre: "Laboratorio de física", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" }
+      { nombre: "Laboratorio de física", tv: false, accesible: true, capacidad: 20, tipo: "Laboratorio" },
+      { nombre: "Mediateca", tv: true, accesible: false, capacidad: 20, tipo: "Salón" }
     ];
 
     let currentDate = new Date();
@@ -986,6 +1054,7 @@
     const message = document.getElementById("message");
     const successOverlay = document.getElementById("successOverlay");
     const successText = document.getElementById("successText");
+    const specialtyReservationsBox = document.getElementById("specialtyReservationsBox");
 
     function formatDate(date) {
       const year = date.getFullYear();
@@ -1062,6 +1131,40 @@
       }
 
       nameInput.classList.add("invalid");
+      errorBox.classList.add("show");
+      return false;
+    }
+
+    function cleanTeacherDocumentValue(value) {
+      return String(value).replace(/\D/g, "").slice(0, 8);
+    }
+
+    function isValidUruguayanCi(ci) {
+      const clean = cleanTeacherDocumentValue(ci);
+      if (!/^\d{7,8}$/.test(clean)) return false;
+
+      const padded = clean.padStart(8, "0");
+      const digits = padded.split("").map(Number);
+      const factors = [2, 9, 8, 7, 6, 3, 4];
+      const sum = factors.reduce((acc, factor, index) => acc + factor * digits[index], 0);
+      const checkDigit = (10 - (sum % 10)) % 10;
+      return checkDigit === digits[7];
+    }
+
+    function validateTeacherDocumentLive() {
+      const documentInput = document.getElementById("teacherDocument");
+      const errorBox = document.getElementById("teacherDocumentError");
+      const clean = cleanTeacherDocumentValue(documentInput.value);
+
+      if (documentInput.value !== clean) documentInput.value = clean;
+
+      if (!clean || isValidUruguayanCi(clean)) {
+        documentInput.classList.remove("invalid");
+        errorBox.classList.remove("show");
+        return true;
+      }
+
+      documentInput.classList.add("invalid");
       errorBox.classList.add("show");
       return false;
     }
@@ -1220,13 +1323,90 @@
       }
     }
 
-    function getStudentCount() {
-      const value = parseInt(document.getElementById("studentCount")?.value, 10);
-      return Number.isFinite(value) && value > 0 ? value : null;
+    function getGroupData() {
+      return {
+        grupo: document.getElementById("groupName")?.value.trim() || "",
+        especialidad: document.getElementById("specialty")?.value.trim() || "",
+        unidadCurricular: document.getElementById("subject")?.value.trim() || ""
+      };
     }
 
-    function handleStudentCountChange() {
+    async function handleSpecialtyChange() {
+      selectedSlots = [];
+      selectedRoom = null;
+      currentAvailableRooms = [];
+      slotsBox.innerHTML = `<p class="hint">Completá la fecha y los datos del grupo para ver horarios.</p>`;
+      roomsBox.innerHTML = `<p class="hint">Seleccioná fecha y horario para ver salones.</p>`;
+      recommendationBox.className = "recommendationBox";
+      recommendationBox.innerHTML = "";
+      await loadSpecialtyReservations();
       updateSummary();
+    }
+
+    function handleGroupFieldsChange() {
+      // Grupo y unidad curricular solo actualizan el resumen.
+      // La búsqueda de reservas por especialidad se dispara únicamente desde el campo Especialidad.
+      updateSummary();
+    }
+
+    async function loadSpecialtyReservations() {
+      const { especialidad } = getGroupData();
+
+      if (!specialtyReservationsBox) return;
+
+      if (!selectedDate || !especialidad) {
+        specialtyReservationsBox.innerHTML = `
+          <div class="specialtyReservationsTitle">Reservas de la especialidad</div>
+          <p class="hint">Seleccioná una fecha y una especialidad para ver las reservas existentes.</p>
+        `;
+        return;
+      }
+
+      specialtyReservationsBox.innerHTML = `
+        <div class="specialtyReservationsTitle">Reservas de ${especialidad} para ${formatReadableDate(selectedDate)}</div>
+        <p class="hint">Buscando reservas...</p>
+      `;
+
+      try {
+        const q = query(
+          collection(db, "reservas"),
+          where("fecha", "==", selectedDate),
+          where("especialidad", "==", especialidad)
+        );
+
+        const snapshot = await getDocs(q);
+        const reservas = snapshot.docs
+          .map(reservationDoc => ({ id: reservationDoc.id, ...reservationDoc.data() }))
+          .filter(data => data.estado !== "cancelada")
+          .sort((a, b) => (a.horarios?.[0] || "").localeCompare(b.horarios?.[0] || ""));
+
+        if (reservas.length === 0) {
+          specialtyReservationsBox.innerHTML = `
+            <div class="specialtyReservationsTitle">Reservas de ${especialidad} para ${formatReadableDate(selectedDate)}</div>
+            <p class="hint">No hay reservas activas registradas para esa especialidad en esta fecha.</p>
+          `;
+          return;
+        }
+
+        specialtyReservationsBox.innerHTML = `
+          <div class="specialtyReservationsTitle">Reservas de ${especialidad} para ${formatReadableDate(selectedDate)}</div>
+          ${reservas.map(data => `
+            <div class="specialtyReservationItem">
+              <strong>${data.salon || "Salón sin indicar"}</strong><br>
+              Especialidad: ${data.especialidad || "Sin indicar"}<br>
+              Nivel: ${data.grupo || "Sin indicar"}<br>
+              Horario reservado: ${(data.horarios || []).join(", ") || "Sin indicar"}<br>
+              Docente: ${data.docenteNombre || "Sin indicar"}
+            </div>
+          `).join("")}
+        `;
+      } catch (error) {
+        console.error("Error al consultar reservas por especialidad:", error);
+        specialtyReservationsBox.innerHTML = `
+          <div class="specialtyReservationsTitle">Reservas de la especialidad</div>
+          <p class="hint">No se pudieron cargar las reservas de esa especialidad. Revisá conexión o reglas de Firestore.</p>
+        `;
+      }
     }
 
     function renderRoomDetails(room) {
@@ -1302,11 +1482,12 @@
           div.type = "button";
           div.className = `room ${isSelected ? "selected" : ""}`;
           div.innerHTML = renderRoomDetails(room);
-          div.onclick = () => {
+          div.onclick = async () => {
             selectedRoom = room.nombre;
             document.querySelectorAll(".room").forEach(r => r.classList.remove("selected"));
             div.classList.add("selected");
             updateSummary();
+            await goToStep(3);
           };
 
           roomsBox.appendChild(div);
@@ -1398,10 +1579,11 @@
       selectedSlots = [];
       selectedRoom = null;
       selectedDateBox.textContent = `Fecha seleccionada: ${formatReadableDate(dateText)}`;
-      renderSlots();
+      slotsBox.innerHTML = `<p class="hint">Completá los datos del grupo para ver horarios.</p>`;
       recommendationBox.className = "recommendationBox";
       recommendationBox.innerHTML = "";
       roomsBox.innerHTML = `<p class="hint">Marcá uno o varios horarios para ver salones disponibles.</p>`;
+      loadSpecialtyReservations();
       renderCalendar();
     }
 
@@ -1467,55 +1649,32 @@
         return;
       }
 
-      const studentCount = getStudentCount();
       currentAvailableRooms = rooms
         .filter(room => !occupiedRooms.has(room.nombre))
-        .sort((a, b) => {
-          if (studentCount) {
-            const aFits = a.capacidad >= studentCount ? 0 : 1;
-            const bFits = b.capacidad >= studentCount ? 0 : 1;
-            if (aFits !== bFits) return aFits - bFits;
-            return Math.abs(a.capacidad - studentCount) - Math.abs(b.capacidad - studentCount);
-          }
-          return b.capacidad - a.capacidad || a.nombre.localeCompare(b.nombre);
-        });
+        .filter(room => !(selectedDay === 5 && room.nombre === "Salón 22"))
+        .sort((a, b) => b.capacidad - a.capacidad || a.nombre.localeCompare(b.nombre));
 
       renderAvailableRooms(currentAvailableRooms);
     }
 
     async function validateStep(step) {
       if (step === 2) {
-        if (!selectedDate || selectedSlots.length === 0 || !selectedRoom) {
-          showMessage("Primero seleccioná fecha, uno o varios horarios y un salón.", "error");
+        const { grupo, especialidad, unidadCurricular } = getGroupData();
+
+        if (!selectedDate) {
+          showMessage("Primero seleccioná una fecha.", "error");
+          return false;
+        }
+
+        if (!grupo || !especialidad || !unidadCurricular) {
+          showMessage("Completá especialidad, grupo y unidad curricular antes de elegir horarios.", "error");
           return false;
         }
       }
 
       if (step === 3) {
-        const teacherName = document.getElementById("teacherName").value.trim();
-        const teacherDocument = document.getElementById("teacherDocument").value.trim();
-        const teacherEmail = document.getElementById("teacherEmail").value.trim();
-
-        if (!teacherName || !teacherDocument || !teacherEmail) {
-          showMessage("Completá nombre, cédula y correo del docente.", "error");
-          return false;
-        }
-
-        if (!isValidTeacherName(teacherName)) {
-          validateTeacherNameLive();
-          showMessage("El nombre completo debe tener al menos 4 caracteres y no puede contener números.", "error");
-          return false;
-        }
-
-        if (!isValidEmail(teacherEmail)) {
-          validateTeacherEmailLive();
-          showMessage("Ingresá un correo electrónico válido para continuar.", "error");
-          return false;
-        }
-
-        const resultadoValidacionCorreo = await validarCorreoDocenteParaReserva();
-        if (!resultadoValidacionCorreo.valido) {
-          showMessage(resultadoValidacionCorreo.mensaje, "error");
+        if (!selectedDate || selectedSlots.length === 0 || !selectedRoom) {
+          showMessage("Primero seleccioná uno o varios horarios y un salón.", "error");
           return false;
         }
       }
@@ -1535,19 +1694,25 @@
       message.className = "message";
       message.textContent = "";
 
+      if (step === 2) renderSlots();
       if (step === 3) updateSummary();
     }
 
     function updateSummary() {
-      const studentCount = getStudentCount();
+      const { grupo, especialidad, unidadCurricular } = getGroupData();
       const selectedRoomData = rooms.find(room => room.nombre === selectedRoom);
-      document.getElementById("summaryBox").innerHTML = `
+      const summary = document.getElementById("summaryBox");
+      if (!summary) return;
+
+      summary.innerHTML = `
         <strong>Resumen de la reserva</strong><br>
         Fecha: ${selectedDate ? formatReadableDate(selectedDate) : "Sin seleccionar"}<br>
+        Especialidad: ${especialidad || "Sin seleccionar"}<br>
+        Grupo: ${grupo || "Sin seleccionar"}<br>
+        Unidad curricular: ${unidadCurricular || "Sin completar"}<br>
         Horarios: ${selectedSlots.length ? selectedSlots.join(", ") : "Sin seleccionar"}<br>
         Salón: ${selectedRoom || "Sin seleccionar"}${selectedRoomData ? ` · c${selectedRoomData.capacidad}` : ""}<br>
-        Docente: ${document.getElementById("teacherName").value.trim()}<br>
-        Cantidad de estudiantes: ${studentCount ? studentCount : "No indicada"}
+        Docente: ${document.getElementById("teacherName")?.value.trim() || "Sin completar"}
       `;
     }
 
@@ -1576,7 +1741,11 @@
 
     async function sendEmailNotification(reservationData) {
       const templateParams = {
+        // Se envían ambos nombres porque algunos templates de EmailJS usan {{to_email}}
+        // y otros usan {{email}} en el campo destinatario/autoreply.
         to_email: reservationData.docenteCorreo,
+        email: reservationData.docenteCorreo,
+        reply_to: reservationData.docenteCorreo,
         to_name: reservationData.docenteNombre,
         fecha: formatReadableDate(reservationData.fecha),
         horarios: reservationData.horarios.join(", "),
@@ -1584,9 +1753,10 @@
         grupo: reservationData.grupo,
         especialidad: reservationData.especialidad,
         unidadCurricular: reservationData.unidadCurricular,
-        cantidadEstudiantes: reservationData.cantidadEstudiantes
+        cantidadEstudiantes: reservationData.cantidadEstudiantes || "No solicitada"
       };
 
+      console.log("EmailJS templateParams", templateParams);
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
     }
 
@@ -1602,13 +1772,31 @@
     }
 
     async function saveReservation() {
-      const groupName = document.getElementById("groupName").value.trim();
-      const specialty = document.getElementById("specialty").value.trim();
-      const subject = document.getElementById("subject").value.trim();
-      const studentCount = getStudentCount();
+      const { grupo: groupName, especialidad: specialty, unidadCurricular: subject } = getGroupData();
+      const teacherName = document.getElementById("teacherName").value.trim();
+      const teacherDocument = document.getElementById("teacherDocument").value.trim();
+      const teacherEmail = document.getElementById("teacherEmail").value.trim();
 
-      if (!groupName || !specialty || !subject || !studentCount) {
-        showMessage("Completá grupo, especialidad, unidad curricular y cantidad aproximada de estudiantes.", "error");
+      if (!groupName || !specialty || !subject) {
+        showMessage("Completá grupo, especialidad y unidad curricular.", "error");
+        goToStep(1);
+        return;
+      }
+
+      if (!teacherName || !teacherDocument || !teacherEmail) {
+        showMessage("Completá nombre, cédula y correo del docente.", "error");
+        return;
+      }
+
+      if (!isValidTeacherName(teacherName)) {
+        validateTeacherNameLive();
+        showMessage("El nombre completo debe tener al menos 4 caracteres y no puede contener números.", "error");
+        return;
+      }
+
+      if (!isValidUruguayanCi(teacherDocument)) {
+        validateTeacherDocumentLive();
+        showMessage("Ingresá una cédula uruguaya válida, sin puntos ni guiones.", "error");
         return;
       }
 
@@ -1635,13 +1823,13 @@
         fecha: selectedDate,
         horarios: selectedSlots,
         salon: selectedRoom,
-        docenteNombre: document.getElementById("teacherName").value.trim(),
-        docenteCedula: document.getElementById("teacherDocument").value.trim(),
-        docenteCorreo: document.getElementById("teacherEmail").value.trim().toLowerCase(),
+        docenteNombre: teacherName,
+        docenteCedula: cleanTeacherDocumentValue(teacherDocument),
+        docenteCorreo: teacherEmail.toLowerCase(),
         grupo: groupName,
         especialidad: specialty,
         unidadCurricular: subject,
-        cantidadEstudiantes: studentCount,
+        cantidadEstudiantes: null,
         estado: "activa",
         verificacionMetodo: resultadoValidacionCorreo.metodo,
         correoAutenticado: resultadoValidacionCorreo.correoAutenticado || null,
@@ -1671,7 +1859,8 @@
       } catch (error) {
         mailSent = false;
         console.error("Error EmailJS:", error);
-        showMessage("La reserva se guardó, pero falló el correo: " + (error.text || error.message), "error");
+        const emailErrorText = error.text || error.message || JSON.stringify(error);
+        showMessage("La reserva se guardó, pero falló el correo: " + emailErrorText, "error");
       }
 
       showSuccessModal(mailSent);
@@ -1723,7 +1912,6 @@
             Grupo: ${data.grupo}<br>
             Especialidad: ${data.especialidad}<br>
             Unidad curricular: ${data.unidadCurricular}<br>
-            Cantidad de estudiantes: ${data.cantidadEstudiantes || "No indicada"}
             ${!isCancelled && canChange ? `
               <div class="reservationActions">
                 <button class="btnSmall btnEdit" type="button" onclick="startEditReservation('${data.id}')">Modificar</button>
@@ -1768,10 +1956,10 @@
       document.getElementById("groupName").value = data.grupo || "";
       document.getElementById("specialty").value = data.especialidad || "";
       document.getElementById("subject").value = data.unidadCurricular || "";
-      document.getElementById("studentCount").value = data.cantidadEstudiantes || "";
 
       selectedDateBox.textContent = `Fecha seleccionada: ${formatReadableDate(selectedDate)}`;
       renderCalendar();
+      await loadSpecialtyReservations();
       renderSlots();
       await loadAvailableRooms();
       selectedRoom = data.salon;
@@ -1809,7 +1997,7 @@
       }
     }
 
-    function resetForm() {
+    function resetForm(delayBeforeStart = true) {
       editingReservationId = null;
       editingOriginalBlocks = [];
       selectedDate = null;
@@ -1818,6 +2006,8 @@
       document.querySelectorAll("input").forEach(input => {
         if (input.id !== "searchEmail") input.value = "";
       });
+      document.getElementById("groupName").value = "";
+      document.getElementById("specialty").value = "";
       document.getElementById("filterTv").value = "all";
       document.getElementById("filterAccessible").value = "all";
       document.getElementById("filterCapacity").value = "all";
@@ -1827,10 +2017,27 @@
       recommendationBox.className = "recommendationBox";
       recommendationBox.innerHTML = "";
       selectedDateBox.textContent = "Todavía no seleccionaste una fecha.";
+      if (specialtyReservationsBox) {
+        specialtyReservationsBox.innerHTML = `
+          <div class="specialtyReservationsTitle">Reservas de la especialidad</div>
+          <p class="hint">Seleccioná una fecha y una especialidad para ver las reservas existentes.</p>
+        `;
+      }
       renderCalendar();
       lastTeacherAuthResult = null;
       showTeacherAuthStatus("", "warn", false);
-      setTimeout(() => goToStep(1), 1200);
+      if (delayBeforeStart) {
+        setTimeout(() => goToStep(1), 1200);
+      } else {
+        goToStep(1);
+      }
+    }
+
+    function resetToStart() {
+      const confirmed = confirm("¿Querés volver al inicio y limpiar los datos cargados?");
+      if (!confirmed) return;
+      resetForm(false);
+      showMessage("Formulario reiniciado. Podés comenzar una nueva reserva.", "ok");
     }
 
     function showMessage(text, type) {
@@ -1852,10 +2059,32 @@
     window.handleTeacherEmailInput = handleTeacherEmailInput;
     window.iniciarSesionGoogle = iniciarSesionGoogle;
     window.validateTeacherNameLive = validateTeacherNameLive;
-    window.handleStudentCountChange = handleStudentCountChange;
+    window.validateTeacherDocumentLive = validateTeacherDocumentLive;
+    window.handleSpecialtyChange = handleSpecialtyChange;
+    window.handleGroupFieldsChange = handleGroupFieldsChange;
     window.handleRoomFilterChange = handleRoomFilterChange;
     window.startEditReservation = startEditReservation;
     window.cancelReservation = cancelReservation;
+    window.resetToStart = resetToStart;
+
+    const specialtySelect = document.getElementById("specialty");
+    if (specialtySelect) {
+      ["change", "input"].forEach(eventName => {
+        specialtySelect.addEventListener(eventName, handleSpecialtyChange);
+      });
+    }
+
+    const groupSelect = document.getElementById("groupName");
+    if (groupSelect) {
+      ["change", "input"].forEach(eventName => {
+        groupSelect.addEventListener(eventName, handleGroupFieldsChange);
+      });
+    }
+
+    const subjectInput = document.getElementById("subject");
+    if (subjectInput) {
+      subjectInput.addEventListener("input", handleGroupFieldsChange);
+    }
 
     renderCalendar();
   </script>
