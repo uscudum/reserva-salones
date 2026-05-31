@@ -223,9 +223,9 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
     .stat {
@@ -258,44 +258,77 @@
       font-weight: 800;
     }
 
-    .recentStat {
-      min-height: 112px;
+    .activityPanel {
+      border: 1px solid #f6c985;
+      border-radius: 18px;
+      background: white;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(92, 45, 12, .06);
+      margin-bottom: 18px;
+    }
+
+    .activityHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .activityHeader span {
+      display: block;
+      color: var(--muted);
+      font-size: .82rem;
+      font-weight: 900;
+    }
+
+    .activityHeader small {
+      color: #9a3412;
+      font-size: .72rem;
+      font-weight: 850;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
     }
 
     .latestReservations {
-      margin-top: 6px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
     }
 
     .latestItem {
-      padding-top: 6px;
-      margin-top: 6px;
-      border-top: 1px solid #f8d9ad;
-      font-size: .72rem;
+      background: #fffaf2;
+      border: 1px solid #f8d9ad;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: .76rem;
       line-height: 1.25;
       color: #374151;
       font-weight: 750;
-    }
-
-    .latestItem:first-child {
-      border-top: 0;
-      padding-top: 0;
+      min-width: 0;
     }
 
     .latestItem strong {
       display: block;
-      font-size: .74rem;
+      font-size: .82rem;
       color: #111827;
       line-height: 1.2;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .latestItem small {
       display: block;
       margin-top: 1px;
       color: #6b7280;
-      font-size: .66rem;
-      line-height: 1.18;
-      font-weight: 750;
+      font-size: .72rem;
+      line-height: 1.2;
+      font-weight: 800;
     }
 
     .message {
@@ -481,6 +514,10 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
+      .latestReservations {
+        grid-template-columns: 1fr;
+      }
+
       .toolbar {
         flex-wrap: wrap;
       }
@@ -525,8 +562,15 @@
         width: 100%;
       }
 
-      .stats, .summaryGrid {
+      .stats,
+      .summaryGrid,
+      .latestReservations {
         grid-template-columns: 1fr;
+      }
+
+      .activityHeader {
+        align-items: flex-start;
+        flex-direction: column;
       }
 
       .content, .hero {
@@ -807,7 +851,14 @@
           <div class="stat"><span>Fechas con reservas</span><strong id="totalDates">0</strong><small id="totalDatesGlobal">Total general: 0</small></div>
           <div class="stat"><span>Salones usados</span><strong id="totalRooms">0</strong><small id="totalRoomsGlobal">Total general: 0</small></div>
           <div class="stat"><span>Docentes registrados</span><strong id="totalTeachers">0</strong><small id="totalTeachersGlobal">Total general: 0</small></div>
-          <div class="stat recentStat"><span>Últimas reservas realizadas</span><div id="latestReservations" class="latestReservations">Cargando...</div></div>
+        </div>
+
+        <div class="activityPanel">
+          <div class="activityHeader">
+            <span>Últimas reservas realizadas</span>
+            <small id="latestReservationsCaption">3 registros más recientes</small>
+          </div>
+          <div id="latestReservations" class="latestReservations">Cargando...</div>
         </div>
 
         <div id="statusMessage" class="message">Cargando reservas...</div>
@@ -867,6 +918,7 @@
     const reservationsContainer = document.getElementById("reservationsContainer");
     const printInfo = document.getElementById("printInfo");
     const latestReservations = document.getElementById("latestReservations");
+    const latestReservationsCaption = document.getElementById("latestReservationsCaption");
 
     const rooms = [
       { name: "Salón 1", capacity: 50, hasTv: true, accessible: false, type: "salon" },
@@ -1218,10 +1270,73 @@
       });
     }
 
+    function getStartOfCurrentWeek() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const day = today.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      today.setDate(today.getDate() + diffToMonday);
+
+      return today;
+    }
+
+    function getEndOfCurrentWeek() {
+      const end = getStartOfCurrentWeek();
+      end.setDate(end.getDate() + 7);
+      return end;
+    }
+
+    function countReservationsCreatedThisWeek(reservas = []) {
+      const start = getStartOfCurrentWeek();
+      const end = getEndOfCurrentWeek();
+
+      return reservas.filter(reserva => {
+        const createdDate = getReservationCreatedDate(reserva);
+        return createdDate >= start && createdDate < end;
+      }).length;
+    }
+
+    function countFutureReservationDates(reservas = []) {
+      const todayText = toDateInputValue(new Date());
+      return new Set(
+        reservas
+          .map(reserva => reserva.fecha)
+          .filter(fecha => fecha && fecha >= todayText)
+      ).size;
+    }
+
+    function getMostUsedRoom(reservas = []) {
+      const counts = new Map();
+
+      reservas.forEach(reserva => {
+        const roomName = findRoomInfo(reserva.salon).name;
+        if (!roomName || roomName === "Sin salón") return;
+        counts.set(roomName, (counts.get(roomName) || 0) + 1);
+      });
+
+      if (counts.size === 0) return "Sin datos";
+
+      return Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1] || roomSortValue(a[0]) - roomSortValue(b[0]) || a[0].localeCompare(b[0], "es", { numeric: true }))[0][0];
+    }
+
+    function getLastRegisteredTeacher(reservas = []) {
+      const latest = [...reservas]
+        .filter(reserva => reserva.docenteNombre || reserva.docenteCorreo)
+        .sort((a, b) => getReservationCreatedDate(b) - getReservationCreatedDate(a))[0];
+
+      if (!latest) return "Sin datos";
+
+      return formatTeacherShort(latest.docenteNombre, latest.docenteCorreo);
+    }
+
     function renderLatestReservations(reservasTotales = []) {
       const latest = [...reservasTotales]
         .sort((a, b) => getReservationCreatedDate(b) - getReservationCreatedDate(a))
         .slice(0, 3);
+
+      latestReservationsCaption.textContent = `${latest.length} registro(s) más reciente(s)`;
 
       if (latest.length === 0) {
         latestReservations.textContent = "Sin reservas";
@@ -1235,31 +1350,38 @@
         const horario = Array.isArray(reserva.horarios) && reserva.horarios.length > 0
           ? getUnifiedTime(reserva.horarios)
           : "Sin horario";
+        const unidadCurricular = reserva.unidadCurricular || "Sin UC registrada";
 
         return `
           <div class="latestItem">
             <strong>${escapeHtml(docente)}</strong>
             <small>${escapeHtml(salon)} · ${escapeHtml(fecha)} · ${escapeHtml(horario)}</small>
+            <small>${escapeHtml(unidadCurricular)}</small>
           </div>
         `;
       }).join("");
     }
 
     function renderStats(reservas, reservasTotales = []) {
+      const dataForGlobalStats = reservasTotales.length ? reservasTotales : reservas;
       const currentStats = getStats(reservas);
-      const globalStats = getStats(reservasTotales.length ? reservasTotales : reservas);
+      const globalStats = getStats(dataForGlobalStats);
+      const createdThisWeek = countReservationsCreatedThisWeek(dataForGlobalStats);
+      const futureDates = countFutureReservationDates(dataForGlobalStats);
+      const mostUsedRoom = getMostUsedRoom(reservas.length ? reservas : dataForGlobalStats);
+      const lastTeacher = getLastRegisteredTeacher(dataForGlobalStats);
 
       document.getElementById("totalReservations").textContent = currentStats.reservations;
       document.getElementById("totalDates").textContent = currentStats.dates;
       document.getElementById("totalRooms").textContent = currentStats.rooms;
       document.getElementById("totalTeachers").textContent = currentStats.teachers;
 
-      document.getElementById("totalReservationsGlobal").textContent = `Total general: ${globalStats.reservations}`;
-      document.getElementById("totalDatesGlobal").textContent = `Total general: ${globalStats.dates}`;
-      document.getElementById("totalRoomsGlobal").textContent = `Total general: ${globalStats.rooms}`;
-      document.getElementById("totalTeachersGlobal").textContent = `Total general: ${globalStats.teachers}`;
+      document.getElementById("totalReservationsGlobal").textContent = `Total general: ${globalStats.reservations} · +${createdThisWeek} esta semana`;
+      document.getElementById("totalDatesGlobal").textContent = `Total general: ${globalStats.dates} · Futuras: ${futureDates}`;
+      document.getElementById("totalRoomsGlobal").textContent = `Más usado: ${mostUsedRoom}`;
+      document.getElementById("totalTeachersGlobal").textContent = `Último: ${lastTeacher}`;
 
-      renderLatestReservations(reservasTotales.length ? reservasTotales : reservas);
+      renderLatestReservations(dataForGlobalStats);
     }
 
     function renderRoomTags(roomInfo) {
