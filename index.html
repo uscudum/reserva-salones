@@ -223,7 +223,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -256,6 +256,46 @@
       color: #6b7280;
       font-size: .72rem;
       font-weight: 800;
+    }
+
+    .recentStat {
+      min-height: 112px;
+    }
+
+    .latestReservations {
+      margin-top: 6px;
+    }
+
+    .latestItem {
+      padding-top: 6px;
+      margin-top: 6px;
+      border-top: 1px solid #f8d9ad;
+      font-size: .72rem;
+      line-height: 1.25;
+      color: #374151;
+      font-weight: 750;
+    }
+
+    .latestItem:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .latestItem strong {
+      display: block;
+      font-size: .74rem;
+      color: #111827;
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+
+    .latestItem small {
+      display: block;
+      margin-top: 1px;
+      color: #6b7280;
+      font-size: .66rem;
+      line-height: 1.18;
+      font-weight: 750;
     }
 
     .message {
@@ -437,6 +477,10 @@
     }
 
     @media (max-width: 1050px) {
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
       .toolbar {
         flex-wrap: wrap;
       }
@@ -763,6 +807,7 @@
           <div class="stat"><span>Fechas con reservas</span><strong id="totalDates">0</strong><small id="totalDatesGlobal">Total general: 0</small></div>
           <div class="stat"><span>Salones usados</span><strong id="totalRooms">0</strong><small id="totalRoomsGlobal">Total general: 0</small></div>
           <div class="stat"><span>Docentes registrados</span><strong id="totalTeachers">0</strong><small id="totalTeachersGlobal">Total general: 0</small></div>
+          <div class="stat recentStat"><span>Últimas reservas realizadas</span><div id="latestReservations" class="latestReservations">Cargando...</div></div>
         </div>
 
         <div id="statusMessage" class="message">Cargando reservas...</div>
@@ -821,6 +866,7 @@
     const statusMessage = document.getElementById("statusMessage");
     const reservationsContainer = document.getElementById("reservationsContainer");
     const printInfo = document.getElementById("printInfo");
+    const latestReservations = document.getElementById("latestReservations");
 
     const rooms = [
       { name: "Salón 1", capacity: 50, hasTv: true, accessible: false, type: "salon" },
@@ -1133,6 +1179,72 @@
       };
     }
 
+    function getReservationCreatedDate(reserva) {
+      if (reserva.createdAt && typeof reserva.createdAt.toDate === "function") {
+        return reserva.createdAt.toDate();
+      }
+
+      if (reserva.fechaCreacion && typeof reserva.fechaCreacion.toDate === "function") {
+        return reserva.fechaCreacion.toDate();
+      }
+
+      const possibleDates = [
+        reserva.createdAt,
+        reserva.fechaCreacion,
+        reserva.creadoEn,
+        reserva.timestamp,
+        reserva.fecha
+      ];
+
+      for (const value of possibleDates) {
+        if (!value) continue;
+        const date = new Date(value);
+        if (!Number.isNaN(date.getTime())) return date;
+      }
+
+      return new Date(0);
+    }
+
+    function formatLatestDate(reserva) {
+      if (!reserva.fecha) return "Sin fecha";
+
+      const date = new Date(reserva.fecha + "T00:00:00");
+      if (Number.isNaN(date.getTime())) return reserva.fecha;
+
+      return date.toLocaleDateString("es-UY", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+    }
+
+    function renderLatestReservations(reservasTotales = []) {
+      const latest = [...reservasTotales]
+        .sort((a, b) => getReservationCreatedDate(b) - getReservationCreatedDate(a))
+        .slice(0, 3);
+
+      if (latest.length === 0) {
+        latestReservations.textContent = "Sin reservas";
+        return;
+      }
+
+      latestReservations.innerHTML = latest.map(reserva => {
+        const docente = reserva.docenteNombre || reserva.docenteCorreo || "Sin docente";
+        const salon = findRoomInfo(reserva.salon).name;
+        const fecha = formatLatestDate(reserva);
+        const horario = Array.isArray(reserva.horarios) && reserva.horarios.length > 0
+          ? getUnifiedTime(reserva.horarios)
+          : "Sin horario";
+
+        return `
+          <div class="latestItem">
+            <strong>${escapeHtml(docente)}</strong>
+            <small>${escapeHtml(salon)} · ${escapeHtml(fecha)} · ${escapeHtml(horario)}</small>
+          </div>
+        `;
+      }).join("");
+    }
+
     function renderStats(reservas, reservasTotales = []) {
       const currentStats = getStats(reservas);
       const globalStats = getStats(reservasTotales.length ? reservasTotales : reservas);
@@ -1146,6 +1258,8 @@
       document.getElementById("totalDatesGlobal").textContent = `Total general: ${globalStats.dates}`;
       document.getElementById("totalRoomsGlobal").textContent = `Total general: ${globalStats.rooms}`;
       document.getElementById("totalTeachersGlobal").textContent = `Total general: ${globalStats.teachers}`;
+
+      renderLatestReservations(reservasTotales.length ? reservasTotales : reservas);
     }
 
     function renderRoomTags(roomInfo) {
