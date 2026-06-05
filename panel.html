@@ -223,12 +223,13 @@
 
     .stats {
       display: grid;
-      grid-template-columns: minmax(230px, 1.1fr) minmax(135px, .55fr) minmax(150px, .55fr) minmax(520px, 2.8fr);
+      grid-template-columns: 185px 165px 185px minmax(520px, 1fr);
       gap: 14px;
       margin-bottom: 14px;
       align-items: stretch;
     }
 
+    .stats .stat:nth-child(1),
     .stats .stat:nth-child(2),
     .stats .stat:nth-child(3) {
       padding-left: 20px;
@@ -280,9 +281,12 @@
 
     .latestStat .entryItem {
       display: block;
-      padding-bottom: 5px;
-      margin-bottom: 5px;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
       border-bottom: 1px solid #f6c985;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .latestStat .entryItem:last-child {
@@ -301,6 +305,12 @@
       font-size: .72rem;
       margin: 0;
       color: #0f172a;
+    }
+
+    .weeklyIncomeText {
+      color: #9a3412 !important;
+      font-weight: 950 !important;
+      margin-top: 7px !important;
     }
 
     .message {
@@ -1329,13 +1339,7 @@
         const roomName = findRoomInfo(reserva.salon).name;
 
         return `
-          <small class="entryItem">
-            <span class="entryDate">${escapeHtml(formatShortDateTime(createdDate))}</span>
-            · <strong>${escapeHtml(teacher)}</strong>
-            · ${escapeHtml(especialidad)}
-            · Reserva: ${escapeHtml(reservationDate)}
-            · ${escapeHtml(roomName)}
-          </small>
+          <small class="entryItem"><span class="entryDate">${escapeHtml(formatShortDateTime(createdDate))}</span> · <strong>${escapeHtml(teacher)}</strong> · ${escapeHtml(especialidad)} · Reserva: ${escapeHtml(reservationDate)} · ${escapeHtml(roomName)}</small>
         `;
       }).join("");
     }
@@ -1351,7 +1355,7 @@
       document.getElementById("totalRooms").textContent = currentStats.rooms;
       document.getElementById("totalTeachers").textContent = currentStats.teachers;
 
-      document.getElementById("totalReservationsGlobal").textContent = `Total general: ${globalStats.reservations} · +${createdThisWeek}`;
+      document.getElementById("totalReservationsGlobal").innerHTML = `Total general: ${globalStats.reservations}<br><span class="weeklyIncomeText">+${createdThisWeek} ingresos en la semana</span>`;
       document.getElementById("totalRoomsGlobal").textContent = `Más usado: ${mostUsedRoom}`;
       document.getElementById("totalTeachersGlobal").textContent = `Total general: ${globalStats.teachers}`;
       document.getElementById("latestReservationsInfo").innerHTML = renderLatestReservations(dataForGlobalStats);
