@@ -223,7 +223,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: 185px 165px 185px minmax(520px, 1fr);
+      grid-template-columns: repeat(3, 185px) minmax(620px, 1fr);
       gap: 14px;
       margin-bottom: 14px;
       align-items: stretch;
@@ -266,6 +266,27 @@
       font-weight: 800;
     }
 
+    .roomRanking {
+      margin-top: 8px;
+    }
+
+    .roomRanking small {
+      margin-top: 3px;
+      line-height: 1.25;
+    }
+
+    .roomRanking strong {
+      display: inline;
+      font-size: .72rem;
+      margin: 0;
+      color: #0f172a;
+    }
+
+    .roomRanking .roomCount {
+      color: #9a3412;
+      font-weight: 950;
+    }
+
     .latestStat {
       min-width: 0;
     }
@@ -287,6 +308,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      width: 100%;
     }
 
     .latestStat .entryItem:last-child {
@@ -833,7 +855,7 @@
 
         <div class="stats">
           <div class="stat"><span>Total de reservas</span><strong id="totalReservations">0</strong><small id="totalReservationsGlobal">Total general: 0</small></div>
-          <div class="stat"><span>Salones usados</span><strong id="totalRooms">0</strong><small id="totalRoomsGlobal">Más usado: Sin datos</small></div>
+          <div class="stat"><span>Salones usados</span><strong id="totalRooms">0</strong><div id="totalRoomsGlobal" class="roomRanking"><small>Sin datos</small></div></div>
           <div class="stat"><span>Docentes registrados</span><strong id="totalTeachers">0</strong><small id="totalTeachersGlobal">Total general: 0</small></div>
           <div class="stat latestStat"><span>Últimas reservas ingresadas</span><div id="latestReservationsInfo"><small>Sin datos</small></div></div>
         </div>
@@ -1280,7 +1302,7 @@
       ).size;
     }
 
-    function getMostUsedRoom(reservas = []) {
+    function getTopUsedRooms(reservas = [], limit = 3) {
       const counts = new Map();
 
       reservas.forEach(reserva => {
@@ -1289,10 +1311,29 @@
         counts.set(roomName, (counts.get(roomName) || 0) + 1);
       });
 
-      if (counts.size === 0) return "Sin datos";
-
       return Array.from(counts.entries())
-        .sort((a, b) => b[1] - a[1] || roomSortValue(a[0]) - roomSortValue(b[0]) || a[0].localeCompare(b[0], "es", { numeric: true }))[0][0];
+        .sort((a, b) => b[1] - a[1] || roomSortValue(a[0]) - roomSortValue(b[0]) || a[0].localeCompare(b[0], "es", { numeric: true }))
+        .slice(0, limit)
+        .map(([roomName, count]) => ({ roomName, count }));
+    }
+
+    function getMostUsedRoom(reservas = []) {
+      const topRooms = getTopUsedRooms(reservas, 1);
+      return topRooms.length ? topRooms[0].roomName : "Sin datos";
+    }
+
+    function renderTopUsedRooms(reservas = []) {
+      const topRooms = getTopUsedRooms(reservas, 3);
+
+      if (topRooms.length === 0) {
+        return `<small>Sin datos</small>`;
+      }
+
+      return topRooms.map((room, index) => {
+        const label = index === 0 ? "Más usado" : `${index + 1}.º más usado`;
+        const reservationText = room.count === 1 ? "1 reserva" : `${room.count} reservas`;
+        return `<small>${label}: <strong>${escapeHtml(room.roomName)}</strong> · <span class="roomCount">${reservationText}</span></small>`;
+      }).join("");
     }
 
     function getLatestReservations(reservas = [], limit = 3) {
@@ -1316,12 +1357,15 @@
 
     function formatShortDateTime(date) {
       if (!date) return "Sin ingreso";
-      return date.toLocaleString("es-UY", {
-        day: "2-digit",
-        month: "2-digit",
+
+      const day = date.getDate();
+      const month = date.getMonth() + 1;
+      const time = date.toLocaleTimeString("es-UY", {
         hour: "2-digit",
         minute: "2-digit"
-      });
+      }).toLowerCase();
+
+      return `${day}/${month}, ${time}`;
     }
 
     function renderLatestReservations(reservas = []) {
@@ -1349,14 +1393,14 @@
       const currentStats = getStats(reservas);
       const globalStats = getStats(dataForGlobalStats);
       const createdThisWeek = countReservationsCreatedThisWeek(dataForGlobalStats);
-      const mostUsedRoom = getMostUsedRoom(reservas.length ? reservas : dataForGlobalStats);
+      const roomStatsSource = reservas.length ? reservas : dataForGlobalStats;
 
       document.getElementById("totalReservations").textContent = currentStats.reservations;
       document.getElementById("totalRooms").textContent = currentStats.rooms;
       document.getElementById("totalTeachers").textContent = currentStats.teachers;
 
       document.getElementById("totalReservationsGlobal").innerHTML = `Total general: ${globalStats.reservations}<br><span class="weeklyIncomeText">+${createdThisWeek} ingresos en la semana</span>`;
-      document.getElementById("totalRoomsGlobal").textContent = `Más usado: ${mostUsedRoom}`;
+      document.getElementById("totalRoomsGlobal").innerHTML = renderTopUsedRooms(roomStatsSource);
       document.getElementById("totalTeachersGlobal").textContent = `Total general: ${globalStats.teachers}`;
       document.getElementById("latestReservationsInfo").innerHTML = renderLatestReservations(dataForGlobalStats);
     }
