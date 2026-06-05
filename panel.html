@@ -223,8 +223,8 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(3, 185px) minmax(620px, 1fr);
-      gap: 14px;
+      grid-template-columns: repeat(3, minmax(150px, 170px)) minmax(0, 1fr);
+      gap: 12px;
       margin-bottom: 14px;
       align-items: stretch;
     }
@@ -232,8 +232,8 @@
     .stats .stat:nth-child(1),
     .stats .stat:nth-child(2),
     .stats .stat:nth-child(3) {
-      padding-left: 20px;
-      padding-right: 20px;
+      padding-left: 18px;
+      padding-right: 18px;
     }
 
     .stat {
@@ -253,7 +253,7 @@
 
     .stat strong {
       display: block;
-      font-size: 1.75rem;
+      font-size: 1.65rem;
       margin-top: 4px;
       color: #0f172a;
     }
@@ -314,6 +314,7 @@
 
     .latestStat {
       min-width: 0;
+      overflow: hidden;
     }
 
     .latestStat small {
@@ -333,7 +334,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      width: 100%;
+      max-width: 100%;
     }
 
     .latestStat .entryItem:last-child {
@@ -1414,40 +1415,39 @@
     }
 
 
-    function getLatestRegisteredTeachers(reservas = [], limit = 3) {
+    function getLatestFirstTimeTeachers(reservas = [], limit = 3) {
       const teachers = new Map();
 
       reservas.forEach(reserva => {
         const teacherName = formatTeacherShort(reserva.docenteNombre, reserva.docenteCorreo);
         const key = normalizeText(reserva.docenteCorreo || reserva.docenteNombre || teacherName);
-        const updatedDate = getReservationCreatedDate(reserva);
+        const firstDate = getReservationCreatedDate(reserva);
 
-        if (!key || !teacherName || teacherName === "Sin docente" || !updatedDate) return;
+        if (!key || !teacherName || teacherName === "Sin docente" || !firstDate) return;
 
         const previous = teachers.get(key);
-        if (!previous || updatedDate > previous.updatedDate) {
+        if (!previous || firstDate < previous.firstDate) {
           teachers.set(key, {
             teacherName,
-            updatedDate,
-            especialidad: reserva.especialidad || "Sin especialidad"
+            firstDate
           });
         }
       });
 
       return Array.from(teachers.values())
-        .sort((a, b) => b.updatedDate - a.updatedDate)
+        .sort((a, b) => b.firstDate - a.firstDate)
         .slice(0, limit);
     }
 
     function renderLatestRegisteredTeachers(reservas = []) {
-      const latestTeachers = getLatestRegisteredTeachers(reservas, 3);
+      const latestTeachers = getLatestFirstTimeTeachers(reservas, 3);
 
       if (latestTeachers.length === 0) {
         return `<small>Sin datos</small>`;
       }
 
-      return latestTeachers.map((teacher, index) => `
-        <small>${index + 1}. <strong>${escapeHtml(teacher.teacherName)}</strong> · ${escapeHtml(teacher.especialidad)} · <span class="teacherDate">${escapeHtml(formatShortDateTime(teacher.updatedDate))}</span></small>
+      return latestTeachers.map(teacher => `
+        <small><strong>${escapeHtml(teacher.teacherName)}</strong> · <span class="teacherDate">${escapeHtml(formatShortDateTime(teacher.firstDate))}</span></small>
       `).join("");
     }
 
