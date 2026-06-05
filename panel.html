@@ -271,8 +271,12 @@
     }
 
     .roomRanking small {
+      display: block;
       margin-top: 3px;
       line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .roomRanking strong {
@@ -283,6 +287,7 @@
     }
 
     .roomRanking .roomCount {
+      display: inline;
       color: #9a3412;
       font-weight: 950;
     }
@@ -1408,7 +1413,7 @@
 
       return topRooms.map((room, index) => {
         const label = index === 0 ? "Más usado" : `${index + 1}.º más usado`;
-        const reservationText = room.count === 1 ? "1 reserva" : `${room.count} reservas`;
+        const reservationText = `${room.count} 🔒`;
         return `<small>${label}: <strong>${escapeHtml(room.roomName)}</strong> · <span class="roomCount">${reservationText}</span></small>`;
       }).join("");
     }
