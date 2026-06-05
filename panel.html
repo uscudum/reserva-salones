@@ -223,7 +223,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(3, minmax(150px, 170px)) minmax(0, 1fr);
+      grid-template-columns: minmax(150px, 170px) minmax(215px, 240px) minmax(230px, 260px) minmax(0, 1fr);
       gap: 12px;
       margin-bottom: 14px;
       align-items: stretch;
@@ -1502,7 +1502,7 @@
       document.getElementById("totalRooms").textContent = currentStats.rooms;
       document.getElementById("totalTeachers").textContent = currentStats.teachers;
 
-      document.getElementById("totalReservationsGlobal").innerHTML = `Total general: ${globalStats.reservations}<br><span class="weeklyIncomeText">+${createdToday} hoy · +${createdThisWeek} semana · +${createdThisMonth} mes</span>`;
+      document.getElementById("totalReservationsGlobal").innerHTML = `Total general: ${globalStats.reservations}<br><span class="weeklyIncomeText"><span class="incomeLine">+${createdToday} ingresos en el día</span><span class="incomeLine">+${createdThisWeek} ingresos en la semana</span><span class="incomeLine">+${createdThisMonth} ingresos en el mes</span></span>`;
       document.getElementById("totalRoomsGlobal").innerHTML = renderTopUsedRooms(dataForGlobalStats);
       document.getElementById("totalTeachersGlobal").textContent = `Total general: ${globalStats.teachers}`;
       document.getElementById("latestTeachersInfo").innerHTML = renderLatestRegisteredTeachers(dataForGlobalStats);
