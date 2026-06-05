@@ -287,6 +287,31 @@
       font-weight: 950;
     }
 
+
+    .teacherList {
+      margin-top: 8px;
+    }
+
+    .teacherList small {
+      margin-top: 3px;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .teacherList strong {
+      display: inline;
+      font-size: .72rem;
+      margin: 0;
+      color: #0f172a;
+    }
+
+    .teacherList .teacherDate {
+      color: #9a3412;
+      font-weight: 950;
+    }
+
     .latestStat {
       min-width: 0;
     }
@@ -856,7 +881,7 @@
         <div class="stats">
           <div class="stat"><span>Total de reservas</span><strong id="totalReservations">0</strong><small id="totalReservationsGlobal">Total general: 0</small></div>
           <div class="stat"><span>Salones usados</span><strong id="totalRooms">0</strong><div id="totalRoomsGlobal" class="roomRanking"><small>Sin datos</small></div></div>
-          <div class="stat"><span>Docentes registrados</span><strong id="totalTeachers">0</strong><small id="totalTeachersGlobal">Total general: 0</small></div>
+          <div class="stat teacherStat"><span>Docentes registrados</span><strong id="totalTeachers">0</strong><small id="totalTeachersGlobal">Total general: 0</small><div id="latestTeachersInfo" class="teacherList"><small>Sin datos</small></div></div>
           <div class="stat latestStat"><span>Últimas reservas ingresadas</span><div id="latestReservationsInfo"><small>Sin datos</small></div></div>
         </div>
 
@@ -1388,20 +1413,57 @@
       }).join("");
     }
 
+
+    function getLatestRegisteredTeachers(reservas = [], limit = 3) {
+      const teachers = new Map();
+
+      reservas.forEach(reserva => {
+        const teacherName = formatTeacherShort(reserva.docenteNombre, reserva.docenteCorreo);
+        const key = normalizeText(reserva.docenteCorreo || reserva.docenteNombre || teacherName);
+        const updatedDate = getReservationCreatedDate(reserva);
+
+        if (!key || !teacherName || teacherName === "Sin docente" || !updatedDate) return;
+
+        const previous = teachers.get(key);
+        if (!previous || updatedDate > previous.updatedDate) {
+          teachers.set(key, {
+            teacherName,
+            updatedDate,
+            especialidad: reserva.especialidad || "Sin especialidad"
+          });
+        }
+      });
+
+      return Array.from(teachers.values())
+        .sort((a, b) => b.updatedDate - a.updatedDate)
+        .slice(0, limit);
+    }
+
+    function renderLatestRegisteredTeachers(reservas = []) {
+      const latestTeachers = getLatestRegisteredTeachers(reservas, 3);
+
+      if (latestTeachers.length === 0) {
+        return `<small>Sin datos</small>`;
+      }
+
+      return latestTeachers.map((teacher, index) => `
+        <small>${index + 1}. <strong>${escapeHtml(teacher.teacherName)}</strong> · ${escapeHtml(teacher.especialidad)} · <span class="teacherDate">${escapeHtml(formatShortDateTime(teacher.updatedDate))}</span></small>
+      `).join("");
+    }
+
     function renderStats(reservas, reservasTotales = []) {
       const dataForGlobalStats = reservasTotales.length ? reservasTotales : reservas;
       const currentStats = getStats(reservas);
       const globalStats = getStats(dataForGlobalStats);
       const createdThisWeek = countReservationsCreatedThisWeek(dataForGlobalStats);
-      const roomStatsSource = reservas.length ? reservas : dataForGlobalStats;
-
       document.getElementById("totalReservations").textContent = currentStats.reservations;
       document.getElementById("totalRooms").textContent = currentStats.rooms;
       document.getElementById("totalTeachers").textContent = currentStats.teachers;
 
       document.getElementById("totalReservationsGlobal").innerHTML = `Total general: ${globalStats.reservations}<br><span class="weeklyIncomeText">+${createdThisWeek} ingresos en la semana</span>`;
-      document.getElementById("totalRoomsGlobal").innerHTML = renderTopUsedRooms(roomStatsSource);
+      document.getElementById("totalRoomsGlobal").innerHTML = renderTopUsedRooms(dataForGlobalStats);
       document.getElementById("totalTeachersGlobal").textContent = `Total general: ${globalStats.teachers}`;
+      document.getElementById("latestTeachersInfo").innerHTML = renderLatestRegisteredTeachers(dataForGlobalStats);
       document.getElementById("latestReservationsInfo").innerHTML = renderLatestReservations(dataForGlobalStats);
     }
 
