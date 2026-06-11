@@ -378,6 +378,35 @@
 
     .incomeLine {
       display: block;
+      color: #9a3412;
+      font-weight: 950;
+    }
+
+    .loadingBox {
+      display: grid;
+      gap: 12px;
+    }
+
+    .loadingCard {
+      height: 74px;
+      border-radius: 16px;
+      background: linear-gradient(90deg, #fff3df 25%, #ffffff 50%, #fff3df 75%);
+      background-size: 200% 100%;
+      border: 1px solid #f6c985;
+      animation: loadingPulse 1.2s infinite linear;
+    }
+
+    @keyframes loadingPulse {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .stats.isLoading .stat strong,
+    .stats.isLoading .stat small,
+    .stats.isLoading .roomRanking,
+    .stats.isLoading .teacherList,
+    .stats.isLoading #latestReservationsInfo {
+      opacity: .55;
     }
 
     .message {
@@ -961,6 +990,7 @@
     const statusMessage = document.getElementById("statusMessage");
     const reservationsContainer = document.getElementById("reservationsContainer");
     const printInfo = document.getElementById("printInfo");
+    const statsContainer = document.querySelector(".stats");
 
     const rooms = [
       { name: "Salón 1", capacity: 50, hasTv: true, accessible: false, type: "salon" },
@@ -1634,10 +1664,32 @@
       printInfo.textContent = `CERP del Litoral · Sede Salto · ${total} reserva(s) · ${filterText}`;
     }
 
-    async function loadReservations() {
+
+    function showLoadingState() {
       statusMessage.className = "message";
       statusMessage.textContent = "Cargando reservas...";
-      reservationsContainer.innerHTML = "";
+
+      if (statsContainer) {
+        statsContainer.classList.add("isLoading");
+      }
+
+      reservationsContainer.innerHTML = `
+        <div class="loadingBox" aria-label="Cargando datos">
+          <div class="loadingCard"></div>
+          <div class="loadingCard"></div>
+          <div class="loadingCard"></div>
+        </div>
+      `;
+    }
+
+    function hideLoadingState() {
+      if (statsContainer) {
+        statsContainer.classList.remove("isLoading");
+      }
+    }
+
+    async function loadReservations() {
+      showLoadingState();
 
       try {
         let q;
@@ -1700,8 +1752,10 @@
           return horarioA.localeCompare(horarioB) || String(a.salon).localeCompare(String(b.salon), "es", { numeric: true });
         });
 
+        hideLoadingState();
         renderReservations(reservas, reservasTotales);
       } catch (error) {
+        hideLoadingState();
         console.error("Error al cargar reservas:", error);
         statusMessage.className = "message error";
         statusMessage.textContent = "Error al cargar reservas: " + error.message;
