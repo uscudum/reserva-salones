@@ -223,17 +223,9 @@
 
     .stats {
       display: grid;
-      grid-template-columns: 185px 165px 185px minmax(520px, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 14px;
       margin-bottom: 14px;
-      align-items: stretch;
-    }
-
-    .stats .stat:nth-child(1),
-    .stats .stat:nth-child(2),
-    .stats .stat:nth-child(3) {
-      padding-left: 20px;
-      padding-right: 20px;
     }
 
     .stat {
@@ -264,53 +256,6 @@
       color: #6b7280;
       font-size: .72rem;
       font-weight: 800;
-    }
-
-    .latestStat {
-      min-width: 0;
-    }
-
-    .latestStat small {
-      display: block;
-      margin-top: 6px;
-      color: #6b7280;
-      font-size: .72rem;
-      line-height: 1.35;
-      font-weight: 800;
-    }
-
-    .latestStat .entryItem {
-      display: block;
-      padding-bottom: 8px;
-      margin-bottom: 8px;
-      border-bottom: 1px solid #f6c985;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .latestStat .entryItem:last-child {
-      border-bottom: 0;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .latestStat .entryDate {
-      color: #9a3412;
-      font-weight: 900;
-    }
-
-    .latestStat small strong {
-      display: inline;
-      font-size: .72rem;
-      margin: 0;
-      color: #0f172a;
-    }
-
-    .weeklyIncomeText {
-      color: #9a3412 !important;
-      font-weight: 950 !important;
-      margin-top: 7px !important;
     }
 
     .message {
@@ -496,10 +441,6 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .latestStat {
-        grid-column: span 2;
-      }
-
       .toolbar {
         flex-wrap: wrap;
       }
@@ -544,14 +485,7 @@
         width: 100%;
       }
 
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .latestStat {
-        grid-column: span 1;
-      }
-
+      .stats,
       .summaryGrid,
       .activityHeader {
         align-items: flex-start;
@@ -833,9 +767,9 @@
 
         <div class="stats">
           <div class="stat"><span>Total de reservas</span><strong id="totalReservations">0</strong><small id="totalReservationsGlobal">Total general: 0</small></div>
-          <div class="stat"><span>Salones usados</span><strong id="totalRooms">0</strong><small id="totalRoomsGlobal">Más usado: Sin datos</small></div>
-          <div class="stat"><span>Docentes registrados</span><strong id="totalTeachers">0</strong><small id="totalTeachersGlobal">Total general: 0</small></div>
-          <div class="stat latestStat"><span>Últimas reservas ingresadas</span><div id="latestReservationsInfo"><small>Sin datos</small></div></div>
+          <div class="stat"><span>Fechas con reservas</span><strong id="totalDates">0</strong><small id="totalDatesGlobal">Total general: 0</small></div>
+          <div class="stat"><span>Salones usados</span><strong id="totalRooms">0</strong><small id="totalRoomsGlobal">Total general: 0</small></div>
+          <div class="stat"><span>Docentes registrados</span><strong id="totalTeachers">0</strong><small id="totalTeachersGlobal">Total general: 0</small><small id="lastTeacherInfo">Último: Sin datos</small></div>
         </div>
 
         <div id="statusMessage" class="message">Cargando reservas...</div>
@@ -1207,50 +1141,38 @@
     }
 
     function getReservationCreatedDate(reserva) {
+      if (reserva.createdAt && typeof reserva.createdAt.toDate === "function") {
+        return reserva.createdAt.toDate();
+      }
+
+      if (reserva.fechaCreacion && typeof reserva.fechaCreacion.toDate === "function") {
+        return reserva.fechaCreacion.toDate();
+      }
+
       const possibleDates = [
-        reserva.actualizadoEn,
-        reserva.creadoEn,
         reserva.createdAt,
         reserva.fechaCreacion,
+        reserva.creadoEn,
         reserva.timestamp,
-        reserva.created_at,
-        reserva.fechaIngreso,
-        reserva.ingresadoEn
+        reserva.fecha
       ];
 
       for (const value of possibleDates) {
         if (!value) continue;
-
-        if (typeof value.toDate === "function") {
-          const date = value.toDate();
-          if (!Number.isNaN(date.getTime())) return date;
-        }
-
-        if (typeof value.toMillis === "function") {
-          const date = new Date(value.toMillis());
-          if (!Number.isNaN(date.getTime())) return date;
-        }
-
-        if (typeof value === "object" && typeof value.seconds === "number") {
-          const milliseconds = value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1000000);
-          const date = new Date(milliseconds);
-          if (!Number.isNaN(date.getTime())) return date;
-        }
-
         const date = new Date(value);
         if (!Number.isNaN(date.getTime())) return date;
       }
 
-      return null;
+      return new Date(0);
     }
 
     function getStartOfCurrentWeek() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Semana de ingreso: domingo 00:00 a domingo siguiente 00:00.
-      // Esto permite contar quiénes ingresaron reservas entre domingo y sábado.
-      today.setDate(today.getDate() - today.getDay());
+      const day = today.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      today.setDate(today.getDate() + diffToMonday);
 
       return today;
     }
@@ -1267,7 +1189,7 @@
 
       return reservas.filter(reserva => {
         const createdDate = getReservationCreatedDate(reserva);
-        return createdDate && createdDate >= start && createdDate < end;
+        return createdDate >= start && createdDate < end;
       }).length;
     }
 
@@ -1295,53 +1217,14 @@
         .sort((a, b) => b[1] - a[1] || roomSortValue(a[0]) - roomSortValue(b[0]) || a[0].localeCompare(b[0], "es", { numeric: true }))[0][0];
     }
 
-    function getLatestReservations(reservas = [], limit = 3) {
-      return [...reservas]
-        .map(reserva => ({ reserva, createdDate: getReservationCreatedDate(reserva) }))
-        .filter(item => item.createdDate)
-        .sort((a, b) => b.createdDate - a.createdDate)
-        .slice(0, limit)
-        .map(item => item.reserva);
-    }
+    function getLastRegisteredTeacher(reservas = []) {
+      const latest = [...reservas]
+        .filter(reserva => reserva.docenteNombre || reserva.docenteCorreo)
+        .sort((a, b) => getReservationCreatedDate(b) - getReservationCreatedDate(a))[0];
 
-    function formatShortDate(dateText) {
-      if (!dateText) return "Sin fecha";
-      const date = new Date(dateText + "T00:00:00");
-      return date.toLocaleDateString("es-UY", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      });
-    }
+      if (!latest) return "Sin datos";
 
-    function formatShortDateTime(date) {
-      if (!date) return "Sin ingreso";
-      return date.toLocaleString("es-UY", {
-        day: "2-digit",
-        month: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    }
-
-    function renderLatestReservations(reservas = []) {
-      const latestReservations = getLatestReservations(reservas, 3);
-
-      if (latestReservations.length === 0) {
-        return `<small>No se encontró fecha/hora de ingreso en las reservas.</small>`;
-      }
-
-      return latestReservations.map(reserva => {
-        const createdDate = getReservationCreatedDate(reserva);
-        const teacher = formatTeacherShort(reserva.docenteNombre, reserva.docenteCorreo);
-        const especialidad = reserva.especialidad || "Sin especialidad";
-        const reservationDate = formatShortDate(reserva.fecha);
-        const roomName = findRoomInfo(reserva.salon).name;
-
-        return `
-          <small class="entryItem"><span class="entryDate">${escapeHtml(formatShortDateTime(createdDate))}</span> · <strong>${escapeHtml(teacher)}</strong> · ${escapeHtml(especialidad)} · Reserva: ${escapeHtml(reservationDate)} · ${escapeHtml(roomName)}</small>
-        `;
-      }).join("");
+      return formatTeacherShort(latest.docenteNombre, latest.docenteCorreo);
     }
 
     function renderStats(reservas, reservasTotales = []) {
@@ -1349,16 +1232,20 @@
       const currentStats = getStats(reservas);
       const globalStats = getStats(dataForGlobalStats);
       const createdThisWeek = countReservationsCreatedThisWeek(dataForGlobalStats);
+      const futureDates = countFutureReservationDates(dataForGlobalStats);
       const mostUsedRoom = getMostUsedRoom(reservas.length ? reservas : dataForGlobalStats);
+      const lastTeacher = getLastRegisteredTeacher(dataForGlobalStats);
 
       document.getElementById("totalReservations").textContent = currentStats.reservations;
+      document.getElementById("totalDates").textContent = currentStats.dates;
       document.getElementById("totalRooms").textContent = currentStats.rooms;
       document.getElementById("totalTeachers").textContent = currentStats.teachers;
 
-      document.getElementById("totalReservationsGlobal").innerHTML = `Total general: ${globalStats.reservations}<br><span class="weeklyIncomeText">+${createdThisWeek} ingresos en la semana</span>`;
+      document.getElementById("totalReservationsGlobal").textContent = `Total general: ${globalStats.reservations} · +${createdThisWeek} esta semana`;
+      document.getElementById("totalDatesGlobal").textContent = `Total general: ${globalStats.dates} · Futuras: ${futureDates}`;
       document.getElementById("totalRoomsGlobal").textContent = `Más usado: ${mostUsedRoom}`;
       document.getElementById("totalTeachersGlobal").textContent = `Total general: ${globalStats.teachers}`;
-      document.getElementById("latestReservationsInfo").innerHTML = renderLatestReservations(dataForGlobalStats);
+      document.getElementById("lastTeacherInfo").textContent = `Último: ${lastTeacher}`;
     }
 
     function renderRoomTags(roomInfo) {
