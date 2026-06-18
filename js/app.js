@@ -38,6 +38,13 @@ const dateModeFilter = document.getElementById("dateModeFilter");
     const printInfo = document.getElementById("printInfo");
     const statsContainer = document.querySelector(".stats");
 
+
+function isVisibleReservation(reserva) {
+  const estado = normalizeText(reserva?.estado || "activa");
+  return !["cancelada", "cancelado", "eliminada", "eliminado", "deleted", "borrada", "borrado"].includes(estado);
+}
+
+
 rooms.forEach(room => {
   const option = document.createElement("option");
   option.value = room.name;
@@ -531,8 +538,13 @@ async function loadReservations() {
           getDocs(collection(db, "reservas"))
         ]);
 
-        let reservas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const reservasTotales = totalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let reservas = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(isVisibleReservation);
+
+        const reservasTotales = totalSnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(isVisibleReservation);
 
         const selectedRoom = roomFilter.value;
         const search = normalizeText(searchFilter.value);
