@@ -50,13 +50,21 @@ export function escapeHtml(text) {
     }
 
 export function getUnifiedTime(horarios) {
-      if (!Array.isArray(horarios) || horarios.length === 0) return "Sin horario";
-      if (horarios.length === 1) return horarios[0];
+  if (!Array.isArray(horarios) || horarios.length === 0) return "Sin horario";
 
-      const firstStart = String(horarios[0]).split(" - ")[0];
-      const lastEnd = String(horarios[horarios.length - 1]).split(" - ")[1];
-      return `${firstStart} - ${lastEnd || ""}`.trim();
-    }
+  const sorted = [...horarios].sort((a, b) => {
+    const startA = String(a).split(" - ")[0];
+    const startB = String(b).split(" - ")[0];
+    return startA.localeCompare(startB);
+  });
+
+  if (sorted.length === 1) return sorted[0];
+
+  const firstStart = String(sorted[0]).split(" - ")[0];
+  const lastEnd = String(sorted[sorted.length - 1]).split(" - ")[1];
+
+  return `${firstStart} - ${lastEnd || ""}`.trim();
+}
 
 export function getLevel(data) {
       return data.nivel || data.grupo || "No registrado";
